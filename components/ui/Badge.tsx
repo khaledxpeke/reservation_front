@@ -1,12 +1,12 @@
 type BadgeVariant = "default" | "success" | "warning" | "danger" | "info" | "gradient";
 
 const styles: Record<BadgeVariant, string> = {
-  default: "bg-slate-100 text-slate-700 border border-slate-200 shadow-sm",
+  default: "bg-zinc-100 text-zinc-700 border border-zinc-200 shadow-sm",
   success: "bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm shadow-emerald-100",
   warning: "bg-amber-100 text-amber-800 border border-amber-200 shadow-sm shadow-amber-100",
   danger: "bg-rose-100 text-rose-800 border border-rose-200 shadow-sm shadow-rose-100",
   info: "bg-sky-100 text-sky-800 border border-sky-200 shadow-sm shadow-sky-100",
-  gradient: "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md shadow-indigo-200 border-none",
+  gradient: "bg-zinc-900 text-white shadow-md shadow-zinc-200 border-none",
 };
 
 export function Badge({

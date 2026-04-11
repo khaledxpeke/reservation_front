@@ -26,10 +26,10 @@ export function StatCard({
   detail?: string;
 }) {
   return (
-    <Card className="p-6 bg-gradient-to-br from-white to-slate-50">
-      <dt className="text-sm font-bold text-slate-500 uppercase tracking-wider">{label}</dt>
-      <dd className="mt-2 text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">{value}</dd>
-      {detail && <p className="mt-2 text-xs font-medium text-slate-400 bg-slate-100 inline-block px-2 py-1 rounded-md">{detail}</p>}
+    <Card className="p-6 bg-white border border-zinc-200">
+      <dt className="text-sm font-bold text-zinc-500 uppercase tracking-wider">{label}</dt>
+      <dd className="mt-2 text-4xl font-black text-zinc-900">{value}</dd>
+      {detail && <p className="mt-2 text-xs font-bold text-emerald-700 bg-emerald-50 inline-block px-2.5 py-1 rounded-md uppercase tracking-wide">{detail}</p>}
     </Card>
   );
 }

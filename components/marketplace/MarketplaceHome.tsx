@@ -6,47 +6,70 @@ import { searchPartners, type MarketplacePartnerItem } from "@/lib/api/marketpla
 import { listCategories, type Category } from "@/lib/api/categories";
 import { ApiError } from "@/lib/api/types";
 import { Alert, Button, Pagination, CardSkeleton, EmptyState, Input } from "@/components/ui";
+import { Calendar, Users, Heart, Tv, Wifi, Lightbulb, Zap, MapPin } from "lucide-react"; // Assuming lucide-react is installed or we can use SVG
 
 function PartnerCard({ p }: { p: MarketplacePartnerItem }) {
+  // Mock data for the UI
+  const price = Math.floor(Math.random() * 50) + 50; // Random price between 50 and 100
+  const capacity = p.resources.length > 0 ? p.resources[0].capacity || 4 : 4;
+  
   return (
-    <Link href={`/partenaires/${p.id}`} className="group block h-full">
-      <div className="relative h-full flex flex-col rounded-3xl border-2 border-slate-100 bg-white p-6 transition-all duration-300 hover:-translate-y-2 hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/10">
-        <div className="absolute -top-3 -right-3 h-12 w-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-lg transform group-hover:scale-110 transition-transform">
-          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z" />
-          </svg>
-        </div>
+    <div className="flex flex-col sm:flex-row gap-6 bg-white rounded-3xl p-4 border border-zinc-200 transition-shadow hover:shadow-md">
+      {/* Left Image Placeholder */}
+      <div className="relative w-full sm:w-64 h-48 sm:h-auto rounded-2xl bg-zinc-100 overflow-hidden shrink-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-zinc-200 to-zinc-300"></div>
+        {/* Placeholder Heart Icon */}
+        <button className="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-sm rounded-full text-zinc-600 hover:text-red-500 transition">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+        </button>
+      </div>
 
-        <div className="mb-4">
-          <span className="inline-block rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-600">
+      {/* Middle Content */}
+      <div className="flex-1 py-2 flex flex-col">
+        <div className="mb-2">
+          <span className="inline-block bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
             {p.category.name}
           </span>
         </div>
-
-        <h3 className="text-xl font-extrabold text-slate-900 group-hover:text-indigo-600 transition-colors">
+        
+        <h3 className="text-xl font-bold text-zinc-900 mb-2">
           {p.name}
         </h3>
-        <p className="mt-2 text-sm font-medium text-slate-500 flex items-center gap-1.5">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z" />
-          </svg>
-          {p.city}
-        </p>
-
-        <div className="mt-auto pt-6 flex items-center justify-between">
-          <span className="text-sm font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
-            {p._count.resources} terrain{p._count.resources > 1 ? "s" : ""}
+        
+        <div className="flex flex-wrap items-center gap-4 text-sm text-zinc-500 mb-3">
+          <span className="flex items-center gap-1.5">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+            {capacity} Joueurs
           </span>
-          <span className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-            </svg>
+          <span className="flex items-center gap-1.5">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            {p.city}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+            {p._count.resources} Terrains
           </span>
         </div>
+        
+        <p className="text-zinc-500 text-sm mt-auto max-w-md">
+          Espace professionnel et lumineux parfait pour vos parties de Padel. {p.address ? p.address : ''}
+        </p>
       </div>
-    </Link>
+
+      {/* Right Pricing / Action */}
+      <div className="w-full sm:w-48 py-2 sm:pl-6 sm:border-l border-zinc-100 flex flex-col justify-between items-start sm:items-end">
+        <div className="mb-4 sm:mb-0 text-left sm:text-right w-full">
+          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-1">Total</p>
+          <p className="text-2xl font-bold text-zinc-900">${price}</p>
+          <p className="text-xs text-zinc-500 mt-1">par heure</p>
+        </div>
+        <Link href={`/partenaires/${p.id}`} className="w-full">
+          <button className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-3 px-4 rounded-xl transition-colors">
+            Réserver
+          </button>
+        </Link>
+      </div>
+    </div>
   );
 }
 
@@ -87,136 +110,163 @@ export function MarketplaceHome() {
   useEffect(() => { void load(1); }, [load]);
 
   return (
-    <div className="flex flex-col gap-12 bg-grid-pattern relative pb-16">
-      {/* Decorative Blobs */}
-      <div className="absolute top-0 left-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-      <div className="absolute top-0 right-10 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" style={{ animationDelay: '2s' }}></div>
-      <div className="absolute -bottom-8 left-20 w-72 h-72 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" style={{ animationDelay: '4s' }}></div>
+    <div className="min-h-screen bg-[#fdfbf7] py-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          
+          {/* Left Sidebar */}
+          <aside className="w-full lg:w-[320px] shrink-0 space-y-6">
+            {/* Search Form Card */}
+            <div className="bg-white rounded-[24px] border border-zinc-200 p-6 shadow-sm">
+              <form onSubmit={(e) => { e.preventDefault(); void load(1); }} className="space-y-6">
+                
+                {/* What do you need */}
+                <div>
+                  <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wide mb-2">Que cherchez-vous ?</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-400">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                    </div>
+                    <select
+                      className="w-full pl-10 pr-10 py-3 bg-white border border-zinc-200 text-zinc-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent appearance-none font-medium"
+                      value={categoryId}
+                      onChange={(e) => setCategoryId(e.target.value)}
+                    >
+                      <option value="">Tous les types</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-zinc-400">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                    </div>
+                  </div>
+                </div>
 
-      {/* Hero Section */}
-      <div className="relative text-center mt-12 mb-8 animate-fade-in z-10">
-        <h1 className="text-5xl md:text-7xl font-black tracking-tight text-slate-900 mb-6">
-          Trouvez votre terrain <br /> 
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 animate-pulse">
-            de Padel.
-          </span>
-        </h1>
-        <p className="mt-4 text-xl text-slate-600 font-medium max-w-2xl mx-auto">
-          Parcourez nos clubs partenaires, découvrez des offres incroyables et réservez en un clin d'œil.
-        </p>
-      </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Date (Mock) */}
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wide mb-2">Ville</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-400">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                      </div>
+                      <input 
+                        type="text"
+                        placeholder="Ex: Paris"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        className="w-full pl-10 pr-3 py-3 bg-white border border-zinc-200 text-zinc-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent font-medium"
+                      />
+                    </div>
+                  </div>
 
-      <div className="flex flex-col lg:flex-row gap-10 relative z-10">
-        {/* Sidebar Filters */}
-        <aside className="w-full lg:w-80 flex-shrink-0">
-          <div className="sticky top-24 rounded-3xl border-2 border-slate-100 bg-white/80 backdrop-blur-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-            <h2 className="text-2xl font-black text-slate-900 mb-6 flex items-center gap-2">
-              <svg className="h-6 w-6 text-indigo-500" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
-              </svg>
-              Filtres
-            </h2>
-            <form
-              onSubmit={(e) => { e.preventDefault(); void load(1); }}
-              className="flex flex-col gap-6"
-            >
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Ville</label>
-                <Input
-                  type="text"
-                  placeholder="Où voulez-vous jouer ?"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Nom du club</label>
-                <Input
-                  type="text"
-                  placeholder="Ex: Padel Arena..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
+                  {/* People (Mock - Map to search) */}
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wide mb-2">Club</label>
+                    <div className="relative">
+                      <input 
+                        type="text"
+                        placeholder="Nom..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="w-full px-3 py-3 bg-white border border-zinc-200 text-zinc-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent font-medium"
+                      />
+                    </div>
+                  </div>
+                </div>
 
-              <div className="pt-4 border-t border-slate-100">
-                <Button type="submit" variant="gradient" className="w-full">
-                  Rechercher
-                </Button>
-              </div>
-            </form>
-          </div>
-        </aside>
-
-        {/* Main Content */}
-        <div className="flex-1 min-w-0">
-          {/* Categories Horizontal Scroll */}
-          <div className="mb-10">
-            <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-              <button
-                onClick={() => setCategoryId("")}
-                className={`flex-shrink-0 px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${
-                  categoryId === "" 
-                    ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20 scale-105" 
-                    : "bg-white text-slate-600 border-2 border-slate-100 hover:border-indigo-200 hover:text-indigo-600 hover:bg-indigo-50"
-                }`}
-              >
-                Tous les terrains
-              </button>
-              {categories.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => setCategoryId(c.id)}
-                  className={`flex-shrink-0 px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${
-                    categoryId === c.id 
-                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 scale-105" 
-                      : "bg-white text-slate-600 border-2 border-slate-100 hover:border-indigo-200 hover:text-indigo-600 hover:bg-indigo-50"
-                  }`}
+                <button 
+                  type="submit" 
+                  className="w-full bg-[#162a22] hover:bg-[#0f1f18] text-white font-medium py-4 px-4 rounded-xl transition-colors mt-2"
                 >
-                  {c.name}
+                  Trouver & Réserver
                 </button>
-              ))}
+              </form>
             </div>
-          </div>
 
-          {error && <Alert>{error}</Alert>}
-
-          {/* Results Header */}
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-2xl font-black text-slate-900">
-              Clubs disponibles
-            </h2>
-            <div className="px-4 py-1.5 rounded-full bg-indigo-100 text-indigo-700 text-sm font-bold animate-pulse">
-              {loading ? "..." : `${items.length} club${items.length !== 1 ? "s" : ""}`}
+            {/* Instant Confirmation Card */}
+            <div className="bg-[#f0f7f4] rounded-[20px] p-5 flex items-start gap-4">
+              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm text-emerald-600">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>
+              </div>
+              <div>
+                <h4 className="font-bold text-zinc-900 text-sm mb-1">Confirmation Instantanée</h4>
+                <p className="text-zinc-500 text-xs leading-relaxed">Pas d'inscription requise. Réservez en quelques secondes.</p>
+              </div>
             </div>
-          </div>
 
-          {/* Grid */}
-          {loading ? (
-            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
+            {/* Quick Tip Card */}
+            <div className="bg-[#fcfbf9] border border-zinc-100 rounded-[20px] p-5 flex items-start gap-4 shadow-sm">
+              <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center shrink-0 text-amber-500">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+              </div>
+              <div>
+                <h4 className="font-bold text-zinc-900 text-sm uppercase tracking-wide mb-1 text-[11px]">Astuce</h4>
+                <p className="text-zinc-500 text-xs leading-relaxed">Filtrez vos résultats, changez la ville, ou mettez à jour votre recherche sans quitter la page.</p>
+              </div>
             </div>
-          ) : items.length === 0 ? (
-            <EmptyState
-              title="Oups, aucun club trouvé !"
-              description="Essayez de modifier vos filtres ou de changer de ville."
-            />
-          ) : (
-            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {items.map((p) => <PartnerCard key={p.id} p={p} />)}
-            </div>
-          )}
 
-          <div className="mt-16 flex justify-center">
-            <Pagination
-              page={pagination.page}
-              totalPages={pagination.totalPages}
-              loading={loading}
-              onPrev={() => void load(pagination.page - 1)}
-              onNext={() => void load(pagination.page + 1)}
-            />
-          </div>
+          </aside>
+
+          {/* Right Content Area */}
+          <main className="flex-1 min-w-0">
+            {/* Top Bar: Results count & Sort */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-wide">
+                {loading ? "Recherche en cours..." : `${items.length} ESPACE${items.length > 1 ? 'S' : ''} TROUVÉ${items.length > 1 ? 'S' : ''}`}
+              </h2>
+              
+              <div className="flex items-center gap-3">
+                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+                  Filtres
+                </button>
+                <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-4 py-2">
+                  <span className="text-sm text-zinc-500">Trier par:</span>
+                  <select className="text-sm font-medium text-zinc-900 bg-transparent focus:outline-none appearance-none pr-4 relative">
+                    <option>Recommandé</option>
+                    <option>Prix croissant</option>
+                    <option>Prix décroissant</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {error && <Alert>{error}</Alert>}
+
+            {/* List */}
+            <div className="space-y-4">
+              {loading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-48 bg-white border border-zinc-200 rounded-3xl animate-pulse flex items-center justify-center">
+                    <div className="w-8 h-8 border-4 border-zinc-200 border-t-zinc-400 rounded-full animate-spin"></div>
+                  </div>
+                ))
+              ) : items.length === 0 ? (
+                <EmptyState
+                  title="Oups, aucun club trouvé !"
+                  description="Essayez de modifier vos filtres ou de changer de ville."
+                />
+              ) : (
+                items.map((p) => <PartnerCard key={p.id} p={p} />)
+              )}
+            </div>
+
+            {/* Pagination */}
+            {items.length > 0 && (
+              <div className="mt-8 flex justify-center">
+                <Pagination
+                  page={pagination.page}
+                  totalPages={pagination.totalPages}
+                  loading={loading}
+                  onPrev={() => void load(pagination.page - 1)}
+                  onNext={() => void load(pagination.page + 1)}
+                />
+              </div>
+            )}
+          </main>
+          
         </div>
       </div>
     </div>
