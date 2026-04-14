@@ -1,27 +1,39 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { searchPartners, type MarketplacePartnerItem } from "@/lib/api/marketplace";
 import { listCategories, type Category } from "@/lib/api/categories";
 import { ApiError } from "@/lib/api/types";
-import { Alert, Button, Pagination, CardSkeleton, EmptyState, Input } from "@/components/ui";
-import { Calendar, Users, Heart, Tv, Wifi, Lightbulb, Zap, MapPin } from "lucide-react"; // Assuming lucide-react is installed or we can use SVG
+import { Alert, Pagination, EmptyState } from "@/components/ui";
+import { categoryImageUrl, partnerHeroUrl, partnerLogoUrl, picsumFromSeed } from "@/lib/imageUrls";
 
-function PartnerCard({ p }: { p: MarketplacePartnerItem }) {
-  // Mock data for the UI
-  const price = Math.floor(Math.random() * 50) + 50; // Random price between 50 and 100
+function PartnerCard({ p, priorityLcp }: { p: MarketplacePartnerItem; priorityLcp?: boolean }) {
   const capacity = p.resources.length > 0 ? p.resources[0].capacity || 4 : 4;
-  
+  const hero = partnerHeroUrl(p);
+  const logo = partnerLogoUrl(p);
+
   return (
     <div className="flex flex-col sm:flex-row gap-6 bg-white rounded-3xl p-4 border border-zinc-200 transition-shadow hover:shadow-md">
-      {/* Left Image Placeholder */}
-      <div className="relative w-full sm:w-64 h-48 sm:h-auto rounded-2xl bg-zinc-100 overflow-hidden shrink-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-zinc-200 to-zinc-300"></div>
-        {/* Placeholder Heart Icon */}
-        <button className="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-sm rounded-full text-zinc-600 hover:text-red-500 transition">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-        </button>
+      <div className="relative w-full sm:w-64 h-48 sm:min-h-[200px] shrink-0 overflow-hidden rounded-2xl bg-zinc-100">
+        <Image
+          src={hero}
+          alt={`${p.name} — photo`}
+          fill
+          priority={priorityLcp}
+          className="object-cover"
+          sizes="(max-width: 640px) 100vw, 256px"
+        />
+        <div className="absolute bottom-2 left-2 h-12 w-12 overflow-hidden rounded-full border-2 border-white bg-white shadow-md">
+          <Image
+            src={logo}
+            alt={`Logo ${p.name}`}
+            width={48}
+            height={48}
+            className="h-full w-full object-cover"
+          />
+        </div>
       </div>
 
       {/* Middle Content */}
@@ -56,15 +68,16 @@ function PartnerCard({ p }: { p: MarketplacePartnerItem }) {
         </p>
       </div>
 
-      {/* Right Pricing / Action */}
-      <div className="w-full sm:w-48 py-2 sm:pl-6 sm:border-l border-zinc-100 flex flex-col justify-between items-start sm:items-end">
-        <div className="mb-4 sm:mb-0 text-left sm:text-right w-full">
-          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-1">Total</p>
-          <p className="text-2xl font-bold text-zinc-900">${price}</p>
-          <p className="text-xs text-zinc-500 mt-1">par heure</p>
+      <div className="flex w-full flex-col items-start justify-between border-zinc-100 py-2 sm:w-48 sm:items-end sm:border-l sm:pl-6">
+        <div className="mb-4 w-full text-left sm:mb-0 sm:text-right">
+          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-zinc-400">Créneaux</p>
+          <p className="text-sm text-zinc-600">Voir disponibilités et tarifs sur la fiche club.</p>
         </div>
         <Link href={`/partenaires/${p.id}`} className="w-full">
-          <button className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-3 px-4 rounded-xl transition-colors">
+          <button
+            type="button"
+            className="w-full rounded-xl bg-zinc-900 py-3 px-4 font-medium text-white transition-colors hover:bg-zinc-800"
+          >
             Réserver
           </button>
         </Link>
@@ -213,8 +226,8 @@ export function MarketplaceHome() {
           <main className="flex-1 min-w-0">
             {/* Top Bar: Results count & Sort */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-wide">
-                {loading ? "Recherche en cours..." : `${items.length} ESPACE${items.length > 1 ? 'S' : ''} TROUVÉ${items.length > 1 ? 'S' : ''}`}
+              <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-900">
+                {loading ? "Recherche en cours..." : `${items.length} ESPACE${items.length > 1 ? "S" : ""} TROUVÉ${items.length > 1 ? "S" : ""}`}
               </h2>
               
               <div className="flex items-center gap-3">
@@ -235,6 +248,63 @@ export function MarketplaceHome() {
 
             {error && <Alert>{error}</Alert>}
 
+            {categories.length > 0 && (
+              <div className="mb-8">
+                <p className="mb-3 text-xs font-bold uppercase tracking-wide text-zinc-500">
+                  Par catégorie
+                </p>
+                <div className="flex gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:thin]">
+                  <button
+                    type="button"
+                    onClick={() => setCategoryId("")}
+                    className={`flex shrink-0 flex-col overflow-hidden rounded-2xl border-2 text-left transition ${
+                      categoryId === ""
+                        ? "border-[#162a22] ring-2 ring-[#162a22]/20"
+                        : "border-zinc-200 hover:border-zinc-300"
+                    }`}
+                  >
+                    <div className="relative h-20 w-28 bg-zinc-100">
+                      <Image
+                        src={picsumFromSeed("marketplace-all-categories", 280, 200)}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        sizes="112px"
+                      />
+                    </div>
+                    <span className="bg-white px-2 py-2 text-center text-xs font-semibold text-zinc-800">
+                      Tous
+                    </span>
+                  </button>
+                  {categories.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setCategoryId(c.id)}
+                      className={`flex shrink-0 flex-col overflow-hidden rounded-2xl border-2 text-left transition ${
+                        categoryId === c.id
+                          ? "border-[#162a22] ring-2 ring-[#162a22]/20"
+                          : "border-zinc-200 hover:border-zinc-300"
+                      }`}
+                    >
+                      <div className="relative h-20 w-28 bg-zinc-100">
+                        <Image
+                          src={categoryImageUrl(c)}
+                          alt=""
+                          fill
+                          className="object-cover"
+                          sizes="112px"
+                        />
+                      </div>
+                      <span className="max-w-[7rem] truncate bg-white px-2 py-2 text-center text-xs font-semibold text-zinc-800">
+                        {c.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* List */}
             <div className="space-y-4">
               {loading ? (
@@ -249,7 +319,9 @@ export function MarketplaceHome() {
                   description="Essayez de modifier vos filtres ou de changer de ville."
                 />
               ) : (
-                items.map((p) => <PartnerCard key={p.id} p={p} />)
+                items.map((p, i) => (
+                  <PartnerCard key={p.id} p={p} priorityLcp={i === 0} />
+                ))
               )}
             </div>
 

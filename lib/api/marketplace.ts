@@ -5,9 +5,10 @@ export interface MarketplacePartnerItem {
   id: string;
   name: string;
   logo: string | null;
+  coverImage: string | null;
   city: string;
   address: string | null;
-  category: { id: string; name: string; slug: string };
+  category: { id: string; name: string; slug: string; imageUrl: string | null };
   resources: { id: string; name: string; capacity: number }[];
   _count: { resources: number };
 }
@@ -31,6 +32,7 @@ export interface PublicPartner {
   id: string;
   name: string;
   logo: string | null;
+  coverImage: string | null;
   city: string;
   phone: string;
   address: string | null;
@@ -38,6 +40,7 @@ export interface PublicPartner {
     id: string;
     name: string;
     slug: string;
+    imageUrl: string | null;
     subCategories: { id: string; name: string; defaultDurationMin: number }[];
   };
   resources: {

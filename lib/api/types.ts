@@ -27,6 +27,7 @@ export interface AuthUser {
     address: string | null;
     categoryId: string;
     logo: string | null;
+    coverImage: string | null;
     isVerified: boolean;
     packId: string | null;
   } | null;

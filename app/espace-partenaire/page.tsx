@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Alert, Card, PageHeader } from "@/components/ui";
 
 const tiles = [
+  { href: "/espace-partenaire/profil", title: "Profil & images", desc: "Logo, bannière (Cloudinary) et coordonnées." },
   { href: "/espace-partenaire/reservations", title: "Réservations", desc: "Confirmer ou refuser les demandes." },
   { href: "/espace-partenaire/ressources", title: "Terrains", desc: "Ajouter des terrains et définir les horaires." },
   { href: "/espace-partenaire/offres", title: "Offres", desc: "Promotions soumises à validation admin." },

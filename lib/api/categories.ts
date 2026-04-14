@@ -5,12 +5,14 @@ export interface SubCategory {
   name: string;
   defaultDurationMin: number;
   categoryId: string;
+  imageUrl: string | null;
 }
 
 export interface Category {
   id: string;
   name: string;
   slug: string;
+  imageUrl: string | null;
   subCategories: SubCategory[];
 }
 
@@ -21,6 +23,7 @@ export function listCategories() {
 export interface CreateCategoryBody {
   name: string;
   slug: string;
+  imageUrl?: string | null;
 }
 
 export function createCategory(body: CreateCategoryBody) {
@@ -38,6 +41,7 @@ export function deleteCategory(id: string) {
 export interface CreateSubCategoryBody {
   name: string;
   defaultDurationMin: number;
+  imageUrl?: string | null;
 }
 
 export function addSubCategory(categoryId: string, body: CreateSubCategoryBody) {

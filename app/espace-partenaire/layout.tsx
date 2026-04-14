@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 
 const partnerLinks = [
   { href: "/espace-partenaire", label: "Tableau de bord", exact: true },
+  { href: "/espace-partenaire/profil", label: "Profil & images" },
   { href: "/espace-partenaire/reservations", label: "Réservations" },
   { href: "/espace-partenaire/offres", label: "Mes offres" },
   { href: "/espace-partenaire/ressources", label: "Terrains" },
