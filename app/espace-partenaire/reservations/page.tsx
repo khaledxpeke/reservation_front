@@ -1,17 +1,32 @@
 "use client";
 
 import { useCallback, useState, useEffect } from "react";
-import { listPartnerReservations, updateReservationStatus, type PartnerReservation } from "@/lib/api/reservations";
-import { useApi, useMutation, formatDateFR } from "@/hooks/useApi";
+import { listPartnerReservations, updateReservationStatus, createReservation, type PartnerReservation } from "@/lib/api/reservations";
+import { listResources, type Resource } from "@/lib/api/resources";
+import { useMutation, formatDateFR } from "@/hooks/useApi";
 import { ApiError, Paginated } from "@/lib/api/types";
-import { Alert, Button, PageHeader, StatusBadge, EmptyState, TableSkeleton, Pagination } from "@/components/ui";
+import { Alert, Button, PageHeader, StatusBadge, EmptyState, TableSkeleton, Pagination, Input } from "@/components/ui";
 
 export default function PartnerReservationsPage() {
   const [page, setPage] = useState(1);
   const [data, setData] = useState<Paginated<PartnerReservation> | null>(null);
+  const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedReservation, setSelectedReservation] = useState<PartnerReservation | null>(null);
+  
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    resourceId: "",
+    guestName: "",
+    guestPhone: "",
+    guestEmail: "",
+    date: "",
+    startTime: "",
+    endTime: ""
+  });
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [createLoading, setCreateLoading] = useState(false);
 
   const mutation = useMutation(updateReservationStatus);
 
@@ -19,15 +34,22 @@ export default function PartnerReservationsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await listPartnerReservations({ page: p, limit: 10 });
+      const [res, resResources] = await Promise.all([
+        listPartnerReservations({ page: p, limit: 10 }),
+        listResources()
+      ]);
       setData(res);
+      setResources(resResources);
+      if (resResources.length > 0 && !createForm.resourceId) {
+        setCreateForm(prev => ({ ...prev, resourceId: resResources[0].id }));
+      }
       setPage(p);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err instanceof ApiError ? err.message : "Erreur de chargement");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [createForm.resourceId]);
 
   useEffect(() => { void load(1); }, [load]);
 
@@ -39,11 +61,127 @@ export default function PartnerReservationsPage() {
     }
   };
 
+  const handleCreateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreateError(null);
+    setCreateLoading(true);
+    try {
+      await createReservation({
+        ...createForm,
+        guestEmail: createForm.guestEmail.trim() || undefined
+      });
+      setIsCreateOpen(false);
+      setCreateForm({
+        resourceId: resources.length > 0 ? resources[0].id : "",
+        guestName: "",
+        guestPhone: "",
+        guestEmail: "",
+        date: "",
+        startTime: "",
+        endTime: ""
+      });
+      load(1);
+    } catch (err: unknown) {
+      setCreateError(err instanceof ApiError ? err.message : "Erreur de création");
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
   return (
     <div>
-      <PageHeader title="Réservations" description="Gérez les demandes de réservation de vos clients." />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <PageHeader title="Réservations" description="Gérez les demandes de réservation de vos clients." />
+        <Button variant="primary" onClick={() => setIsCreateOpen(true)} className="w-full sm:w-auto">
+          Nouvelle réservation
+        </Button>
+      </div>
       {(error || mutation.error) && <div className="mt-4"><Alert>{error || mutation.error}</Alert></div>}
       
+      {/* Create Modal */}
+      {isCreateOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-lg shadow-xl relative animate-fade-in my-8">
+            <button onClick={() => setIsCreateOpen(false)} className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-900 transition">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <h3 className="text-xl font-bold text-zinc-900 mb-6">Nouvelle réservation</h3>
+            
+            {createError && <Alert className="mb-4">{createError}</Alert>}
+
+            <form onSubmit={handleCreateSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1">Terrain</label>
+                <select
+                  required
+                  className="w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-zinc-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                  value={createForm.resourceId}
+                  onChange={e => setCreateForm(prev => ({ ...prev, resourceId: e.target.value }))}
+                >
+                  {resources.map(r => (
+                    <option key={r.id} value={r.id}>{r.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <Input
+                label="Nom de l'invité"
+                required
+                value={createForm.guestName}
+                onChange={e => setCreateForm(prev => ({ ...prev, guestName: e.target.value }))}
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  label="Téléphone"
+                  required
+                  value={createForm.guestPhone}
+                  onChange={e => setCreateForm(prev => ({ ...prev, guestPhone: e.target.value }))}
+                />
+                <Input
+                  label="Email (optionnel)"
+                  type="email"
+                  value={createForm.guestEmail}
+                  onChange={e => setCreateForm(prev => ({ ...prev, guestEmail: e.target.value }))}
+                />
+              </div>
+
+              <Input
+                label="Date"
+                type="date"
+                required
+                value={createForm.date}
+                onChange={e => setCreateForm(prev => ({ ...prev, date: e.target.value }))}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Heure de début"
+                  type="time"
+                  required
+                  value={createForm.startTime}
+                  onChange={e => setCreateForm(prev => ({ ...prev, startTime: e.target.value }))}
+                />
+                <Input
+                  label="Heure de fin"
+                  type="time"
+                  required
+                  value={createForm.endTime}
+                  onChange={e => setCreateForm(prev => ({ ...prev, endTime: e.target.value }))}
+                />
+              </div>
+
+              <div className="pt-4 flex justify-end gap-3">
+                <Button variant="ghost" type="button" onClick={() => setIsCreateOpen(false)}>Annuler</Button>
+                <Button variant="primary" type="submit" disabled={createLoading}>
+                  {createLoading ? "Création..." : "Créer"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Détails Modal */}
       {selectedReservation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">

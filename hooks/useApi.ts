@@ -53,7 +53,11 @@ export function useApi<T>(
   }, [fetcher]);
 
   useEffect(() => {
-    if (immediate) void run();
+    let t: ReturnType<typeof setTimeout>;
+    if (immediate) {
+      t = setTimeout(() => { void run(); }, 0);
+    }
+    return () => { if (t) clearTimeout(t); };
   }, [immediate, run]);
 
   const setData: React.Dispatch<React.SetStateAction<T | null>> = useCallback(

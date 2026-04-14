@@ -18,6 +18,7 @@ function formatDateFR(d: string) {
 
 interface Props {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -38,8 +39,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function PartenairePage({ params }: Props) {
+export default async function PartenairePage({ params, searchParams }: Props) {
   const { id } = await params;
+  const sp = (await searchParams) ?? {};
+  const initialDate = typeof sp.date === "string" ? sp.date : undefined;
+  const initialResourceId = typeof sp.resourceId === "string" ? sp.resourceId : undefined;
+  const initialStartTime = typeof sp.start === "string" ? sp.start : undefined;
+  const initialDurationMin =
+    typeof sp.durationMin === "string" ? Number(sp.durationMin) : undefined;
   let partner;
   try {
     partner = await getPublicPartner(id);
@@ -90,6 +97,31 @@ export default async function PartenairePage({ params }: Props) {
         </div>
       </header>
 
+      {partner.settings &&
+        (partner.settings.description ||
+          (partner.settings.keyFeatures && partner.settings.keyFeatures.length > 0)) && (
+        <section className="mt-8 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950/40">
+          {partner.settings.description && (
+            <div>
+              <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">À propos</h2>
+              <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+                {partner.settings.description}
+              </p>
+            </div>
+          )}
+          {partner.settings.keyFeatures && partner.settings.keyFeatures.length > 0 && (
+            <div className={partner.settings.description ? "mt-6" : ""}>
+              <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Points forts</h2>
+              <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-zinc-600 dark:text-zinc-400">
+                {partner.settings.keyFeatures.map((f) => (
+                  <li key={f}>{f}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )}
+
       {partner.offers.length > 0 && (
         <section className="mt-8" aria-label="Offres en cours">
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Offres en cours</h2>
@@ -111,7 +143,17 @@ export default async function PartenairePage({ params }: Props) {
         </section>
       )}
 
-      <PartnerBooking partner={partner} />
+      <PartnerBooking
+        partner={partner}
+        initialDate={initialDate}
+        initialResourceId={initialResourceId}
+        initialStartTime={initialStartTime}
+        initialDurationMin={
+          initialDurationMin !== undefined && !Number.isNaN(initialDurationMin) && initialDurationMin > 0
+            ? initialDurationMin
+            : undefined
+        }
+      />
     </article>
   );
 }

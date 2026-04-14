@@ -16,13 +16,34 @@ function todayISO(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-export function PartnerBooking({ partner }: { partner: PublicPartner }) {
+export function PartnerBooking({
+  partner,
+  initialDate,
+  initialResourceId,
+  initialStartTime,
+  initialDurationMin,
+}: {
+  partner: PublicPartner;
+  initialDate?: string;
+  initialResourceId?: string;
+  initialStartTime?: string;
+  initialDurationMin?: number;
+}) {
   const resources = partner.resources;
-  const defaultDuration = partner.category.subCategories[0]?.defaultDurationMin ?? 60;
+  const defaultDuration =
+    resources[0]?.subCategory?.defaultDurationMin ??
+    partner.category.subCategories[0]?.defaultDurationMin ??
+    60;
 
-  const [resourceId, setResourceId] = useState(resources[0]?.id ?? "");
-  const [date, setDate] = useState(todayISO());
-  const [durationMin, setDurationMin] = useState(defaultDuration);
+  const [resourceId, setResourceId] = useState(() => {
+    if (initialResourceId && resources.some((r) => r.id === initialResourceId)) return initialResourceId;
+    return resources[0]?.id ?? "";
+  });
+  const [date, setDate] = useState(initialDate && /^\d{4}-\d{2}-\d{2}$/.test(initialDate) ? initialDate : todayISO());
+  const [durationMin, setDurationMin] = useState(() => {
+    if (initialDurationMin && DURATIONS.some((d) => d === initialDurationMin)) return initialDurationMin;
+    return defaultDuration;
+  });
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [guestName, setGuestName] = useState("");
@@ -49,7 +70,15 @@ export function PartnerBooking({ partner }: { partner: PublicPartner }) {
     }
   }, [resourceId, date, durationMin]);
 
-  useEffect(() => { void loadSlots(); }, [loadSlots]);
+  useEffect(() => {
+    void loadSlots();
+  }, [loadSlots]);
+
+  useEffect(() => {
+    if (!initialStartTime || slots.length === 0) return;
+    const found = slots.find((s) => s.startTime === initialStartTime);
+    if (found) setSelectedSlot(found);
+  }, [initialStartTime, slots]);
 
   const resourceName = useMemo(
     () => resources.find((r) => r.id === resourceId)?.name ?? "Terrain",
@@ -105,9 +134,14 @@ export function PartnerBooking({ partner }: { partner: PublicPartner }) {
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </FormField>
           <FormField label="Durée (minutes)">
-            <Select value={durationMin} onChange={(e) => setDurationMin(Number(e.target.value))}>
+            <Select
+              value={durationMin}
+              onChange={(e) => setDurationMin(Number(e.target.value))}
+            >
               {DURATIONS.map((d) => (
-                <option key={d} value={d}>{d} min</option>
+                <option key={d} value={d}>
+                  {d} min
+                </option>
               ))}
             </Select>
           </FormField>

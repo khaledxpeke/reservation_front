@@ -52,6 +52,20 @@ export function updateReservationStatus(
   });
 }
 
+export interface AdminReservationRow extends PartnerReservation {
+  resource?: { name: string; partner: { name: string } };
+}
+
+export function listReservationsAdmin(params: ListPartnerReservationsParams) {
+  return apiRequest<Paginated<AdminReservationRow>>("/api/reservations", {
+    query: params as Record<string, string | number | undefined>,
+  });
+}
+
+export function deleteReservation(id: string) {
+  return apiRequest<{ message: string }>(`/api/reservations/${id}`, { method: "DELETE" });
+}
+
 export interface AdminReservationStats {
   bookings: { total: number; pending: number; confirmed: number; rejected: number };
   partners: { total: number; verified: number };

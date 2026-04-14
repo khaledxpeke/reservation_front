@@ -7,9 +7,10 @@ export interface MarketplacePartnerItem {
   logo: string | null;
   coverImage: string | null;
   city: string;
+  governorate: string | null;
   address: string | null;
   category: { id: string; name: string; slug: string; imageUrl: string | null };
-  resources: { id: string; name: string; capacity: number }[];
+  resources: { id: string; name: string; capacity: number; subCategoryId: string | null; pricePerHour: unknown }[];
   _count: { resources: number };
 }
 
@@ -18,6 +19,7 @@ export interface MarketplaceSearchParams {
   limit?: number;
   categoryId?: string;
   subCategoryId?: string;
+  governorate?: string;
   city?: string;
   search?: string;
 }
@@ -25,6 +27,38 @@ export interface MarketplaceSearchParams {
 export function searchPartners(params: MarketplaceSearchParams) {
   return apiRequest<Paginated<MarketplacePartnerItem>>("/api/marketplace/search", {
     query: params as Record<string, string | number | undefined>,
+  });
+}
+
+export interface CourtOfferRow {
+  partnerId: string;
+  partnerName: string;
+  resourceId: string;
+  resourceName: string;
+  city: string;
+  governorate: string | null;
+  imageUrl: string | null;
+  startTime: string;
+  endTime: string;
+  price: number;
+  originalPrice?: number;
+  offerTitle?: string;
+  durationMin: number;
+}
+
+export interface CourtSlotsParams {
+  categoryId?: string;
+  subCategoryId?: string;
+  governorate?: string;
+  city?: string;
+  date: string;
+  durationMin?: number;
+  timeBand?: "morning" | "afternoon" | "evening" | "all";
+}
+
+export function searchCourtSlots(params: CourtSlotsParams) {
+  return apiRequest<{ items: CourtOfferRow[] }>("/api/marketplace/court-slots", {
+    query: { ...params } as Record<string, string | number | undefined>,
   });
 }
 
@@ -36,6 +70,11 @@ export interface PublicPartner {
   city: string;
   phone: string;
   address: string | null;
+  /** Seeded rich text: description + keyFeatures for club pages */
+  settings?: {
+    description?: string;
+    keyFeatures?: string[];
+  } | null;
   category: {
     id: string;
     name: string;
@@ -47,6 +86,9 @@ export interface PublicPartner {
     id: string;
     name: string;
     capacity: number;
+    pricePerHour?: unknown;
+    subCategoryId?: string | null;
+    subCategory?: { id: string; defaultDurationMin: number } | null;
     availabilities: {
       dayOfWeek: string;
       startTime: string;

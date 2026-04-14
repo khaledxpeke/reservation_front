@@ -23,7 +23,7 @@ export default function AdminUsersPage() {
       const res = await listUsers({ page: p, limit: 10 });
       setData(res);
       setPage(p);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err instanceof ApiError ? err.message : "Erreur de chargement");
     } finally {
       setLoading(false);

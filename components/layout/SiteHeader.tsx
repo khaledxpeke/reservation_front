@@ -26,7 +26,7 @@ function AuthNav({ onClose }: { onClose?: () => void }) {
   const { user, logout } = useAuth();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { const t = setTimeout(() => setMounted(true), 0); return () => clearTimeout(t); }, []);
 
   if (!mounted) return null;
 
@@ -71,7 +71,7 @@ function RoleLinks({ onClose }: { onClose?: () => void }) {
   const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { const t = setTimeout(() => setMounted(true), 0); return () => clearTimeout(t); }, []);
 
   if (!mounted || !user) return null;
 

@@ -35,8 +35,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setUser(hydrateUserFromStorage());
-    setLoading(false);
+    const t = setTimeout(() => {
+      setUser(hydrateUserFromStorage());
+      setLoading(false);
+    }, 0);
+    return () => clearTimeout(t);
   }, []);
 
   const login = useCallback(async (body: LoginBody) => {
