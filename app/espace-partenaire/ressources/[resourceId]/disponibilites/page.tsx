@@ -83,35 +83,77 @@ export default function DisponibilitesPage() {
   return (
     <div>
       <Link href="/espace-partenaire/ressources" className="text-sm text-emerald-700 hover:underline dark:text-emerald-400">
-        ← Retour aux terrains
+        ← Retour aux ressources
       </Link>
       <PageHeader title="Disponibilités" description="Pour chaque jour activé, définissez la plage horaire et l'intervalle." />
 
       {error && <div className="mt-4"><Alert>{error}</Alert></div>}
 
-      <form onSubmit={onSave} className="mt-8 space-y-4">
-        {DAYS.map(({ key, label }) => (
-          <div key={key} className="flex flex-wrap items-center gap-4 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
-            <label className="flex items-center gap-2 text-sm font-medium">
-              <input type="checkbox" checked={rows[key].enabled} onChange={(e) => updateRow(key, { enabled: e.target.checked })} />
-              {label}
-            </label>
-            {rows[key].enabled && (
-              <>
-                <Input type="time" className="w-28" value={rows[key].startTime} onChange={(e) => updateRow(key, { startTime: e.target.value })} />
-                <span className="text-zinc-400">→</span>
-                <Input type="time" className="w-28" value={rows[key].endTime} onChange={(e) => updateRow(key, { endTime: e.target.value })} />
-                <label className="flex items-center gap-2 text-sm text-zinc-600">
-                  Intervalle (min)
-                  <Input type="number" min={15} max={480} step={15} className="w-20" value={rows[key].slotIntervalMin} onChange={(e) => updateRow(key, { slotIntervalMin: Number(e.target.value) })} />
-                </label>
-              </>
-            )}
-          </div>
-        ))}
-        {saveMut.error && <Alert>{saveMut.error}</Alert>}
-        {message && <Alert variant="success">{message}</Alert>}
-        <Button type="submit" loading={saveMut.loading}>Enregistrer</Button>
+      <form onSubmit={onSave} className="mt-8">
+        <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-zinc-50 border-b border-zinc-200">
+              <tr>
+                <th className="px-4 py-3 font-bold text-zinc-500 uppercase text-xs w-12">Actif</th>
+                <th className="px-4 py-3 font-bold text-zinc-500 uppercase text-xs">Jour</th>
+                <th className="px-4 py-3 font-bold text-zinc-500 uppercase text-xs">Début</th>
+                <th className="px-4 py-3 font-bold text-zinc-500 uppercase text-xs">Fin</th>
+                <th className="px-4 py-3 font-bold text-zinc-500 uppercase text-xs">Intervalle (min)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100">
+              {DAYS.map(({ key, label }) => (
+                <tr key={key} className={`transition-colors ${rows[key].enabled ? "bg-white" : "bg-zinc-50/50 text-zinc-400"}`}>
+                  <td className="px-4 py-3">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500 transition-colors cursor-pointer"
+                      checked={rows[key].enabled} 
+                      onChange={(e) => updateRow(key, { enabled: e.target.checked })} 
+                    />
+                  </td>
+                  <td className="px-4 py-3 font-medium">
+                    {label}
+                  </td>
+                  <td className="px-4 py-3">
+                    <Input 
+                      type="time" 
+                      disabled={!rows[key].enabled}
+                      className={`w-32 ${!rows[key].enabled && "opacity-50"}`} 
+                      value={rows[key].startTime} 
+                      onChange={(e) => updateRow(key, { startTime: e.target.value })} 
+                    />
+                  </td>
+                  <td className="px-4 py-3">
+                    <Input 
+                      type="time" 
+                      disabled={!rows[key].enabled}
+                      className={`w-32 ${!rows[key].enabled && "opacity-50"}`} 
+                      value={rows[key].endTime} 
+                      onChange={(e) => updateRow(key, { endTime: e.target.value })} 
+                    />
+                  </td>
+                  <td className="px-4 py-3">
+                    <Input 
+                      type="number" 
+                      disabled={!rows[key].enabled}
+                      min={15} max={1440} step={15} 
+                      className={`w-24 ${!rows[key].enabled && "opacity-50"}`} 
+                      value={rows[key].slotIntervalMin} 
+                      onChange={(e) => updateRow(key, { slotIntervalMin: Number(e.target.value) })} 
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        
+        <div className="mt-6 flex flex-col items-end gap-3">
+          {saveMut.error && <Alert>{saveMut.error}</Alert>}
+          {message && <Alert variant="success">{message}</Alert>}
+          <Button type="submit" loading={saveMut.loading} className="w-full sm:w-auto px-8">Enregistrer l'agenda</Button>
+        </div>
       </form>
     </div>
   );

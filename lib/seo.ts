@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 
 const SITE_NAME = "Padel Résa";
 const BASE_DESC =
-  "Trouvez un partenaire, consultez les créneaux et réservez votre terrain de padel en quelques clics.";
+  "Trouvez un partenaire, consultez les créneaux et réservez votre ressource en quelques clics.";
 
 export function seo(
   overrides: Partial<Metadata> & { title?: string; description?: string } = {},
 ): Metadata {
   const title = overrides.title
     ? `${overrides.title} | ${SITE_NAME}`
-    : `${SITE_NAME} — Réservation de terrains`;
+    : `${SITE_NAME} — Réservation de ressources`;
   const description = overrides.description ?? BASE_DESC;
 
   return {

@@ -22,7 +22,7 @@ export default function AdminDashboard() {
           <StatCard label="En attente" value={stats.bookings.pending} />
           <StatCard label="Confirmées" value={stats.bookings.confirmed} />
           <StatCard label="Partenaires" value={stats.partners.total} detail={`Vérifiés : ${stats.partners.verified}`} />
-          <StatCard label="Terrains actifs" value={stats.resources.total} />
+          <StatCard label="Ressources actives" value={stats.resources.total} />
         </dl>
       )}
     </div>

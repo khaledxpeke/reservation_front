@@ -9,8 +9,6 @@ import { ApiError } from "@/lib/api/types";
 import { Alert, Button, FormField, Input, Select, PageHeader } from "@/components/ui";
 import { Spinner } from "@/components/ui/Spinner";
 
-const DURATIONS = [15, 30, 45, 60, 90, 120] as const;
-
 function todayISO(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -39,11 +37,18 @@ export function PartnerBooking({
     if (initialResourceId && resources.some((r) => r.id === initialResourceId)) return initialResourceId;
     return resources[0]?.id ?? "";
   });
+
+  const selectedResourceObj = useMemo(
+    () => resources.find((r) => r.id === resourceId),
+    [resources, resourceId]
+  );
+  const bookingUnit = selectedResourceObj?.bookingUnit ?? "MINUTES";
+
   const [date, setDate] = useState(initialDate && /^\d{4}-\d{2}-\d{2}$/.test(initialDate) ? initialDate : todayISO());
-  const [durationMin, setDurationMin] = useState(() => {
-    if (initialDurationMin && DURATIONS.some((d) => d === initialDurationMin)) return initialDurationMin;
-    return defaultDuration;
-  });
+  const [endDate, setEndDate] = useState(date);
+  
+  const durationMin = initialDurationMin ?? defaultDuration;
+
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [guestName, setGuestName] = useState("");
@@ -56,6 +61,11 @@ export function PartnerBooking({
 
   const loadSlots = useCallback(async () => {
     if (!resourceId || !date) return;
+    if (bookingUnit === "DAYS") {
+      setSlots([]);
+      setSelectedSlot(null);
+      return;
+    }
     setSlotsLoading(true);
     setError(null);
     setSelectedSlot(null);
@@ -68,7 +78,7 @@ export function PartnerBooking({
     } finally {
       setSlotsLoading(false);
     }
-  }, [resourceId, date, durationMin]);
+  }, [resourceId, date, durationMin, bookingUnit]);
 
   useEffect(() => {
     void loadSlots();
@@ -81,13 +91,14 @@ export function PartnerBooking({
   }, [initialStartTime, slots]);
 
   const resourceName = useMemo(
-    () => resources.find((r) => r.id === resourceId)?.name ?? "Terrain",
+    () => resources.find((r) => r.id === resourceId)?.name ?? "Ressource",
     [resources, resourceId],
   );
 
   const onBook = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedSlot || !resourceId) return;
+    const isReady = bookingUnit === "DAYS" ? !!date && !!endDate : !!selectedSlot;
+    if (!isReady || !resourceId) return;
     setSubmitting(true);
     setMessage(null);
     setError(null);
@@ -98,8 +109,9 @@ export function PartnerBooking({
         guestPhone,
         guestEmail: guestEmail || undefined,
         date,
-        startTime: selectedSlot.startTime,
-        endTime: selectedSlot.endTime,
+        endDate: bookingUnit === "DAYS" ? endDate : undefined,
+        startTime: bookingUnit === "DAYS" ? "00:00" : selectedSlot!.startTime,
+        endTime: bookingUnit === "DAYS" ? "23:59" : selectedSlot!.endTime,
       });
       setMessage("Demande envoyée. Le partenaire confirmera votre réservation.");
       setGuestName("");
@@ -115,91 +127,104 @@ export function PartnerBooking({
   };
 
   if (resources.length === 0) {
-    return <Alert variant="warning">Ce partenaire n'a pas encore de terrain actif.</Alert>;
+    return <Alert variant="warning">Ce partenaire n'a pas encore de ressource active.</Alert>;
   }
 
   return (
     <div className="mt-10 grid gap-8 lg:grid-cols-2">
       <div>
-        <PageHeader title="Réserver un créneau" description="Choisissez un terrain, une date et une durée." />
+        <PageHeader title="Réserver" description="Choisissez votre date et un créneau." />
         <div className="mt-6 space-y-4">
-          <FormField label="Terrain">
+          <FormField label="Ressource">
             <Select value={resourceId} onChange={(e) => setResourceId(e.target.value)}>
               {resources.map((r) => (
-                <option key={r.id} value={r.id}>{r.name} ({r.capacity} places)</option>
+                <option key={r.id} value={r.id}>{r.name} {r.capacity ? `(${r.capacity} places)` : ""}</option>
               ))}
             </Select>
           </FormField>
-          <FormField label="Date">
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          </FormField>
-          <FormField label="Durée (minutes)">
-            <Select
-              value={durationMin}
-              onChange={(e) => setDurationMin(Number(e.target.value))}
-            >
-              {DURATIONS.map((d) => (
-                <option key={d} value={d}>
-                  {d} min
-                </option>
-              ))}
-            </Select>
-          </FormField>
-        </div>
-
-        <div className="mt-6">
-          <h3 className="text-sm font-medium text-zinc-800 dark:text-zinc-200">Créneaux disponibles</h3>
-          {slotsLoading ? (
-            <div className="mt-2"><Spinner /></div>
-          ) : slots.length === 0 ? (
-            <p className="mt-2 text-sm text-zinc-500">Aucun créneau libre.</p>
+          
+          {bookingUnit === "DAYS" ? (
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label="Date de début">
+                <Input type="date" value={date} onChange={(e) => {
+                  setDate(e.target.value);
+                  if (endDate < e.target.value) setEndDate(e.target.value);
+                }} />
+              </FormField>
+              <FormField label="Date de fin">
+                <Input type="date" min={date} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              </FormField>
+            </div>
           ) : (
-            <ul className="mt-3 flex max-h-56 flex-wrap gap-2 overflow-y-auto">
-              {slots.map((s) => {
-                const active = selectedSlot?.startTime === s.startTime && selectedSlot?.endTime === s.endTime;
-                return (
-                  <li key={`${s.startTime}-${s.endTime}`}>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedSlot(s)}
-                      className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
-                        active
-                          ? "border-emerald-600 bg-emerald-50 text-emerald-900 dark:border-emerald-500 dark:bg-emerald-950/50 dark:text-emerald-100"
-                          : "border-zinc-200 bg-white hover:border-emerald-400 dark:border-zinc-700 dark:bg-zinc-950"
-                      }`}
-                    >
-                      {s.startTime} – {s.endTime}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+            <FormField label="Date">
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </FormField>
           )}
         </div>
+
+        {bookingUnit !== "DAYS" && (
+          <div className="mt-6">
+            <h3 className="text-sm font-medium text-zinc-800 dark:text-zinc-200">Créneaux disponibles</h3>
+            {slotsLoading ? (
+              <div className="mt-2"><Spinner /></div>
+            ) : slots.length === 0 ? (
+              <p className="mt-2 text-sm text-zinc-500">Aucun créneau libre.</p>
+            ) : (
+              <ul className="mt-3 flex max-h-56 flex-wrap gap-2 overflow-y-auto">
+                {slots.map((s) => {
+                  const active = selectedSlot?.startTime === s.startTime && selectedSlot?.endTime === s.endTime;
+                  return (
+                    <li key={`${s.startTime}-${s.endTime}`}>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedSlot(s)}
+                        className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                          active
+                            ? "border-emerald-600 bg-emerald-50 text-emerald-900 dark:border-emerald-500 dark:bg-emerald-950/50 dark:text-emerald-100"
+                            : "border-zinc-200 bg-white hover:border-emerald-400 dark:border-zinc-700 dark:bg-zinc-950"
+                        }`}
+                      >
+                        {s.startTime} – {s.endTime}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
 
       <form
         onSubmit={onBook}
-        className="rounded-2xl border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-800 dark:bg-zinc-900/40"
+        className="rounded-2xl border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-800 dark:bg-zinc-900/40 flex flex-col justify-between"
       >
-        <h3 className="font-medium text-zinc-900 dark:text-zinc-50">Vos coordonnées</h3>
-        <p className="mt-1 text-xs text-zinc-500">{resourceName} — {date}</p>
-        <div className="mt-4 space-y-3">
-          <FormField label="Nom complet *">
-            <Input required value={guestName} onChange={(e) => setGuestName(e.target.value)} />
-          </FormField>
-          <FormField label="Téléphone *">
-            <Input required value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} />
-          </FormField>
-          <FormField label="E-mail (optionnel)">
-            <Input type="email" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} />
-          </FormField>
+        <div>
+          <h3 className="font-medium text-zinc-900 dark:text-zinc-50">Vos coordonnées</h3>
+          <p className="mt-1 text-xs text-zinc-500 mb-4">
+            {resourceName} — {bookingUnit === "DAYS" ? `Du ${date} au ${endDate}` : date}
+          </p>
+          <div className="space-y-4">
+            <FormField label="Nom complet *">
+              <Input required value={guestName} onChange={(e) => setGuestName(e.target.value)} />
+            </FormField>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField label="Téléphone *">
+                <Input required value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} />
+              </FormField>
+              <FormField label="E-mail (optionnel)">
+                <Input type="email" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} />
+              </FormField>
+            </div>
+          </div>
         </div>
-        <Button type="submit" loading={submitting} disabled={!selectedSlot} className="mt-6 w-full">
-          Envoyer la demande
-        </Button>
-        {message && <Alert variant="success" >{message}</Alert>}
-        {error && <Alert>{error}</Alert>}
+        <div className="mt-8">
+          <Button type="submit" loading={submitting} disabled={bookingUnit === "DAYS" ? (!date || !endDate) : !selectedSlot} className="w-full">
+            Envoyer la demande
+          </Button>
+          {message && <div className="mt-4"><Alert variant="success">{message}</Alert></div>}
+          {error && <div className="mt-4"><Alert>{error}</Alert></div>}
+        </div>
       </form>
     </div>
   );

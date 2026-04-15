@@ -10,7 +10,7 @@ export interface MarketplacePartnerItem {
   governorate: string | null;
   address: string | null;
   category: { id: string; name: string; slug: string; imageUrl: string | null };
-  resources: { id: string; name: string; capacity: number; subCategoryId: string | null; pricePerHour: unknown }[];
+  resources: { id: string; name: string; capacity: number; subCategoryId: string | null; price: unknown }[];
   _count: { resources: number };
 }
 
@@ -86,7 +86,8 @@ export interface PublicPartner {
     id: string;
     name: string;
     capacity: number;
-    pricePerHour?: unknown;
+    price?: unknown;
+    bookingUnit: "MINUTES" | "HOURS" | "DAYS";
     subCategoryId?: string | null;
     subCategory?: { id: string; defaultDurationMin: number } | null;
     availabilities: {

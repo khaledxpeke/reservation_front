@@ -9,7 +9,7 @@ const partnerLinks = [
   { href: "/espace-partenaire/profil", label: "Profil & images" },
   { href: "/espace-partenaire/reservations", label: "Réservations" },
   { href: "/espace-partenaire/offres", label: "Mes offres" },
-  { href: "/espace-partenaire/ressources", label: "Terrains" },
+  { href: "/espace-partenaire/ressources", label: "Ressources" },
 ];
 
 function SubNav() {

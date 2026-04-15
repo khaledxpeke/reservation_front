@@ -35,7 +35,7 @@ export default function AdminPacksPage() {
         <FormField label="Nom">
           <Input required value={name} onChange={(e) => setName(e.target.value)} />
         </FormField>
-        <FormField label="Max. terrains">
+        <FormField label="Max. ressources">
           <Input type="number" min={1} className="w-24" value={maxResources} onChange={(e) => setMaxResources(Number(e.target.value))} />
         </FormField>
         <FormField label="Prix / mois (€)">
@@ -55,7 +55,7 @@ export default function AdminPacksPage() {
               <Card className="flex flex-wrap items-center justify-between gap-4 px-4 py-3">
                 <div>
                   <p className="font-medium">{p.name}</p>
-                  <p className="text-sm text-zinc-500">{p.maxResources} terrains max · {p.priceMonthly} €/mois</p>
+                  <p className="text-sm text-zinc-500">{p.maxResources} ressources max · {p.priceMonthly} €/mois</p>
                 </div>
                 <Button variant="danger" onClick={() => void onDelete(p.id)}>Supprimer</Button>
               </Card>

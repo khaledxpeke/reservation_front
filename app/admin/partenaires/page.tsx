@@ -232,7 +232,7 @@ export default function AdminPartnersPage() {
 
       {/* Détails */}
       {selectedPartner && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl p-6 w-full max-w-lg shadow-xl relative animate-fade-in max-h-[90vh] overflow-y-auto">
             <button
               type="button"
@@ -310,7 +310,7 @@ export default function AdminPartnersPage() {
 
       {/* Création */}
       {createOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <form
             onSubmit={onCreateSubmit}
             className="bg-white rounded-3xl p-6 w-full max-w-lg shadow-xl relative max-h-[90vh] overflow-y-auto"
@@ -444,7 +444,7 @@ export default function AdminPartnersPage() {
 
       {/* Édition */}
       {editPartner && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <form
             onSubmit={onEditSubmit}
             className="bg-white rounded-3xl p-6 w-full max-w-lg shadow-xl relative max-h-[90vh] overflow-y-auto"
@@ -591,23 +591,23 @@ export default function AdminPartnersPage() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex flex-wrap items-center justify-end gap-1.5">
-                      <Button variant="ghost" className="text-xs px-2 py-1.5" type="button" onClick={() => setSelectedPartner(p)}>
+                      <Button variant="ghost" className="text-[10px] px-2 py-1 h-auto" type="button" onClick={() => setSelectedPartner(p)}>
                         Détails
                       </Button>
-                      <Button variant="ghost" className="text-xs px-2 py-1.5" type="button" onClick={() => openEdit(p)}>
-                        Modifier
+                      <Button variant="ghost" className="text-[10px] px-2 py-1 h-auto" type="button" onClick={() => openEdit(p)}>
+                        Éditer
                       </Button>
                       <Button
                         variant="ghost"
-                        className="text-xs px-2 py-1.5"
+                        className="text-[10px] px-2 py-1 h-auto"
                         type="button"
                         onClick={() => void onVerify(p.id, !p.isVerified)}
                       >
-                        {p.isVerified ? "Retirer" : "Valider"}
+                        {p.isVerified ? "Cacher" : "Valider"}
                       </Button>
                       <Button
                         variant="ghost"
-                        className="text-xs px-2 py-1.5 text-red-600 hover:text-red-700"
+                        className="text-[10px] px-2 py-1 h-auto text-red-600 hover:text-red-700 hover:bg-red-50"
                         type="button"
                         onClick={() => void onDelete(p)}
                       >

@@ -7,6 +7,7 @@ export interface CreateReservationBody {
   guestPhone: string;
   guestEmail?: string;
   date: string;
+  endDate?: string;
   startTime: string;
   endTime: string;
 }
@@ -22,6 +23,7 @@ export interface PartnerReservation {
   guestPhone: string;
   guestEmail: string | null;
   date: string;
+  endDate: string | null;
   startTime: string;
   endTime: string;
   status: string;

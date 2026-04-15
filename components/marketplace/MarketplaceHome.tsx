@@ -52,7 +52,7 @@ export function MarketplaceHome() {
 
   const [dateOffset, setDateOffset] = useState(0);
   const [selectedDate, setSelectedDate] = useState(todayISO);
-  const [durationMin, setDurationMin] = useState(90);
+  const [durationMin] = useState(60); // Hardcoded duration since it was removed from UI
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
   const [items, setItems] = useState<CourtOfferRow[]>([]);
@@ -143,35 +143,27 @@ export function MarketplaceHome() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
 
         {/* Filters Top Bar */}
-        <div className="bg-white rounded-xl border border-zinc-200 p-3 sm:p-4 mb-4 sm:mb-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-            <div className="flex flex-col col-span-2 md:col-span-1">
+        <div className="bg-white rounded-xl border border-zinc-200 p-3 sm:p-4 mb-4 sm:mb-6 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+            <div className="flex flex-col">
               <label className="text-[10px] sm:text-xs font-bold text-zinc-500 uppercase mb-1">Catégorie</label>
-              <select className="border border-zinc-300 rounded-md p-2 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-600 outline-none" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+              <select className="border border-zinc-300 rounded-md p-2 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-600 outline-none transition-shadow" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
                 <option value="">Toutes</option>
                 {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
-            <div className="flex flex-col col-span-2 md:col-span-1">
+            <div className="flex flex-col">
               <label className="text-[10px] sm:text-xs font-bold text-zinc-500 uppercase mb-1">Sous-catégorie</label>
-              <select className="border border-zinc-300 rounded-md p-2 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-600 outline-none disabled:opacity-50" value={subCategoryId} onChange={(e) => setSubCategoryId(e.target.value)} disabled={!categoryId}>
+              <select className="border border-zinc-300 rounded-md p-2 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-600 outline-none transition-shadow disabled:opacity-50 disabled:bg-zinc-50" value={subCategoryId} onChange={(e) => setSubCategoryId(e.target.value)} disabled={!categoryId}>
                 <option value="">Toutes</option>
                 {subCategories.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
-            <div className="flex flex-col col-span-2 md:col-span-1">
+            <div className="flex flex-col">
               <label className="text-[10px] sm:text-xs font-bold text-zinc-500 uppercase mb-1">Région</label>
-              <select className="border border-zinc-300 rounded-md p-2 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-600 outline-none" value={governorate} onChange={(e) => setGovernorate(e.target.value)}>
+              <select className="border border-zinc-300 rounded-md p-2 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-600 outline-none transition-shadow" value={governorate} onChange={(e) => setGovernorate(e.target.value)}>
                 <option value="">Toutes</option>
                 {TUNISIA_GOVERNORATES.map((g) => <option key={g} value={g}>{g}</option>)}
-              </select>
-            </div>
-            <div className="flex flex-col col-span-2 md:col-span-1">
-              <label className="text-[10px] sm:text-xs font-bold text-zinc-500 uppercase mb-1">Durée</label>
-              <select className="border border-zinc-300 rounded-md p-2 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-600 outline-none" value={durationMin} onChange={(e) => setDurationMin(Number(e.target.value))}>
-                <option value={60}>60 min</option>
-                <option value={90}>90 min</option>
-                <option value={120}>120 min</option>
               </select>
             </div>
           </div>
@@ -341,7 +333,7 @@ function CourtCard({ row, date, durationMin }: { row: CourtOfferRow; date: strin
          <div className="flex-1 min-w-0">
            <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-0.5 sm:mb-1">
              <h3 className="font-bold text-zinc-900 text-sm sm:text-base truncate w-full sm:w-auto">
-               {row.partnerName} <span className="font-medium text-zinc-500">{row.resourceName !== "Terrain" ? `- ${row.resourceName}` : ""}</span>
+               {row.partnerName} <span className="font-medium text-zinc-500">{row.resourceName !== "Ressource" ? `- ${row.resourceName}` : ""}</span>
              </h3>
              {row.offerTitle && (
                <span className="shrink-0 bg-red-100 text-red-700 text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full uppercase tracking-wide">

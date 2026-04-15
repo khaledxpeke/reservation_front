@@ -107,11 +107,11 @@ export default function PartnerReservationsPage() {
             </button>
             <h3 className="text-xl font-bold text-zinc-900 mb-6">Nouvelle réservation</h3>
             
-            {createError && <Alert className="mb-4">{createError}</Alert>}
+            {createError && <div className="mb-4"><Alert>{createError}</Alert></div>}
 
             <form onSubmit={handleCreateSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">Terrain</label>
+                <label className="block text-sm font-medium text-zinc-700 mb-1">Ressource</label>
                 <select
                   required
                   className="w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-zinc-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
@@ -124,51 +124,71 @@ export default function PartnerReservationsPage() {
                 </select>
               </div>
 
-              <Input
-                label="Nom de l'invité"
-                required
-                value={createForm.guestName}
-                onChange={e => setCreateForm(prev => ({ ...prev, guestName: e.target.value }))}
-              />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  label="Téléphone"
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1">Nom de l'invité</label>
+                <input
+                  type="text"
                   required
-                  value={createForm.guestPhone}
-                  onChange={e => setCreateForm(prev => ({ ...prev, guestPhone: e.target.value }))}
-                />
-                <Input
-                  label="Email (optionnel)"
-                  type="email"
-                  value={createForm.guestEmail}
-                  onChange={e => setCreateForm(prev => ({ ...prev, guestEmail: e.target.value }))}
+                  className="w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-zinc-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                  value={createForm.guestName}
+                  onChange={e => setCreateForm(prev => ({ ...prev, guestName: e.target.value }))}
                 />
               </div>
 
-              <Input
-                label="Date"
-                type="date"
-                required
-                value={createForm.date}
-                onChange={e => setCreateForm(prev => ({ ...prev, date: e.target.value }))}
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 mb-1">Téléphone</label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-zinc-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                    value={createForm.guestPhone}
+                    onChange={e => setCreateForm(prev => ({ ...prev, guestPhone: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 mb-1">Email (optionnel)</label>
+                  <input
+                    type="email"
+                    className="w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-zinc-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                    value={createForm.guestEmail}
+                    onChange={e => setCreateForm(prev => ({ ...prev, guestEmail: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1">Date</label>
+                <input
+                  type="date"
+                  required
+                  className="w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-zinc-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                  value={createForm.date}
+                  onChange={e => setCreateForm(prev => ({ ...prev, date: e.target.value }))}
+                />
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <Input
-                  label="Heure de début"
-                  type="time"
-                  required
-                  value={createForm.startTime}
-                  onChange={e => setCreateForm(prev => ({ ...prev, startTime: e.target.value }))}
-                />
-                <Input
-                  label="Heure de fin"
-                  type="time"
-                  required
-                  value={createForm.endTime}
-                  onChange={e => setCreateForm(prev => ({ ...prev, endTime: e.target.value }))}
-                />
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 mb-1">Heure de début</label>
+                  <input
+                    type="time"
+                    required
+                    className="w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-zinc-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                    value={createForm.startTime}
+                    onChange={e => setCreateForm(prev => ({ ...prev, startTime: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 mb-1">Heure de fin</label>
+                  <input
+                    type="time"
+                    required
+                    className="w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-zinc-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                    value={createForm.endTime}
+                    onChange={e => setCreateForm(prev => ({ ...prev, endTime: e.target.value }))}
+                  />
+                </div>
               </div>
 
               <div className="pt-4 flex justify-end gap-3">
@@ -191,7 +211,7 @@ export default function PartnerReservationsPage() {
             </button>
             <h3 className="text-xl font-bold text-zinc-900 mb-4">Détails de la réservation</h3>
             <div className="space-y-4">
-              <div><span className="text-zinc-500 text-xs uppercase font-bold">Terrain</span><p className="text-zinc-900 font-medium">{selectedReservation.resource?.name ?? "—"}</p></div>
+              <div><span className="text-zinc-500 text-xs uppercase font-bold">Ressource</span><p className="text-zinc-900 font-medium">{selectedReservation.resource?.name ?? "—"}</p></div>
               <div><span className="text-zinc-500 text-xs uppercase font-bold">Date & Heure</span><p className="text-zinc-900 font-medium">{formatDateFR(selectedReservation.date)} de {selectedReservation.startTime} à {selectedReservation.endTime}</p></div>
               <div><span className="text-zinc-500 text-xs uppercase font-bold">Invité</span><p className="text-zinc-900 font-medium">{selectedReservation.guestName}</p></div>
               <div><span className="text-zinc-500 text-xs uppercase font-bold">Téléphone</span><p className="text-zinc-900 font-medium">{selectedReservation.guestPhone}</p></div>
@@ -225,7 +245,7 @@ export default function PartnerReservationsPage() {
                 <th className="px-6 py-4 font-bold text-zinc-500 uppercase tracking-wider text-xs">Date</th>
                 <th className="px-6 py-4 font-bold text-zinc-500 uppercase tracking-wider text-xs">Créneau</th>
                 <th className="px-6 py-4 font-bold text-zinc-500 uppercase tracking-wider text-xs">Invité</th>
-                <th className="px-6 py-4 font-bold text-zinc-500 uppercase tracking-wider text-xs">Terrain</th>
+                <th className="px-6 py-4 font-bold text-zinc-500 uppercase tracking-wider text-xs">Ressource</th>
                 <th className="px-6 py-4 font-bold text-zinc-500 uppercase tracking-wider text-xs">Statut</th>
                 <th className="px-6 py-4 font-bold text-zinc-500 uppercase tracking-wider text-xs text-right">Actions</th>
               </tr>

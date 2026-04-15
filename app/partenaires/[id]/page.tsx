@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const ogImage = partnerHeroUrl(p);
     return seo({
       title: p.name,
-      description: `Réservez un terrain chez ${p.name} à ${p.city}. Consultez les créneaux et offres disponibles.`,
+      description: `Réservez une ressource chez ${p.name} à ${p.city}. Consultez les créneaux et offres disponibles.`,
       openGraph: {
         type: "article",
         images: [{ url: ogImage, width: 1200, height: 630, alt: p.name }],

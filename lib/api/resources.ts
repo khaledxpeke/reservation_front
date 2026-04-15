@@ -6,11 +6,23 @@ export interface Resource {
   capacity: number;
   isActive: boolean;
   partnerId: string;
+  categoryType: "SPACE" | "SERVICE" | "ITEM";
+  bookingUnit: "MINUTES" | "HOURS" | "DAYS";
+  minBookingDuration: number | null;
+  maxBookingDuration: number | null;
+  bufferTimeMin: number;
+  price: number | null;
 }
 
 export interface CreateResourceBody {
   name: string;
   capacity?: number;
+  categoryType?: "SPACE" | "SERVICE" | "ITEM";
+  bookingUnit?: "MINUTES" | "HOURS" | "DAYS";
+  minBookingDuration?: number | null;
+  maxBookingDuration?: number | null;
+  bufferTimeMin?: number;
+  price?: number;
 }
 
 export function listResources() {
@@ -25,6 +37,12 @@ export interface UpdateResourceBody {
   name?: string;
   capacity?: number;
   isActive?: boolean;
+  categoryType?: "SPACE" | "SERVICE" | "ITEM";
+  bookingUnit?: "MINUTES" | "HOURS" | "DAYS";
+  minBookingDuration?: number | null;
+  maxBookingDuration?: number | null;
+  bufferTimeMin?: number;
+  price?: number;
 }
 
 export function updateResource(id: string, body: UpdateResourceBody) {

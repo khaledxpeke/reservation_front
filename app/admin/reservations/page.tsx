@@ -100,7 +100,7 @@ export default function AdminReservationsPage() {
             <thead className="bg-zinc-50 border-b border-zinc-200">
               <tr>
                 <th className="px-6 py-4 font-bold text-zinc-500 uppercase tracking-wider text-xs">Date & Heure</th>
-                <th className="px-6 py-4 font-bold text-zinc-500 uppercase tracking-wider text-xs">Partenaire / Terrain</th>
+                <th className="px-6 py-4 font-bold text-zinc-500 uppercase tracking-wider text-xs">Partenaire / Ressource</th>
                 <th className="px-6 py-4 font-bold text-zinc-500 uppercase tracking-wider text-xs">Client</th>
                 <th className="px-6 py-4 font-bold text-zinc-500 uppercase tracking-wider text-xs">Statut</th>
                 <th className="px-6 py-4 font-bold text-zinc-500 uppercase tracking-wider text-xs text-right">Actions</th>

@@ -48,7 +48,7 @@ export default function InscriptionPage() {
       <div className="rounded-xl border border-zinc-100 bg-white p-8 shadow-sm">
         <h1 className="text-xl font-semibold text-zinc-900">Inscription partenaire</h1>
         <p className="mt-1 text-sm text-zinc-500">
-          Créez votre espace pour gérer vos terrains et réservations.
+          Créez votre espace pour gérer vos ressources et réservations.
         </p>
 
         <form onSubmit={onSubmit} className="mt-6 grid gap-4 sm:grid-cols-2">

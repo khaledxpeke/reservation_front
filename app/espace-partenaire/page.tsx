@@ -7,7 +7,7 @@ import { Alert, Card, PageHeader } from "@/components/ui";
 const tiles = [
   { href: "/espace-partenaire/profil", title: "Profil & images", desc: "Logo, bannière (Cloudinary) et coordonnées." },
   { href: "/espace-partenaire/reservations", title: "Réservations", desc: "Confirmer ou refuser les demandes." },
-  { href: "/espace-partenaire/ressources", title: "Terrains", desc: "Ajouter des terrains et définir les horaires." },
+  { href: "/espace-partenaire/ressources", title: "Ressources", desc: "Ajouter des ressources et définir les horaires." },
   { href: "/espace-partenaire/offres", title: "Offres", desc: "Promotions soumises à validation admin." },
 ] as const;
 
@@ -19,7 +19,7 @@ export default function EspacePartenaireDashboard() {
     <div>
       <PageHeader
         title="Espace partenaire"
-        description={`Bienvenue${p?.name ? `, ${p.name}` : ""}. Gérez vos terrains, créneaux et réservations.`}
+        description={`Bienvenue${p?.name ? `, ${p.name}` : ""}. Gérez vos ressources, créneaux et réservations.`}
       />
       <ul className="mt-8 grid gap-4 sm:grid-cols-2">
         {tiles.map((t) => (
