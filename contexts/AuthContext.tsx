@@ -13,17 +13,25 @@ import {
   login as apiLogin,
   logout as apiLogout,
   registerPartner,
+  registerCustomer as apiRegisterCustomer,
   hydrateUserFromStorage,
 } from "@/lib/api/auth";
 import { setStoredUser, tokenStorage } from "@/lib/api/client";
 import type { AuthUser, LoginResult } from "@/lib/api/types";
-import type { LoginBody, RegisterBody } from "@/lib/api/auth";
+import type {
+  LoginBody,
+  RegisterBody,
+  RegisterCustomerBody,
+} from "@/lib/api/auth";
 
 interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
   login: (body: LoginBody) => Promise<LoginResult>;
+  /** @deprecated use registerPartner */
   register: (body: RegisterBody) => Promise<LoginResult>;
+  registerPartner: (body: RegisterBody) => Promise<LoginResult>;
+  registerCustomer: (body: RegisterCustomerBody) => Promise<LoginResult>;
   logout: () => Promise<void>;
   setUser: (user: AuthUser | null) => void;
 }
@@ -49,8 +57,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return result;
   }, []);
 
-  const register = useCallback(async (body: RegisterBody) => {
+  const registerPartnerFn = useCallback(async (body: RegisterBody) => {
     const result = await registerPartner(body);
+    setUser(result.user);
+    return result;
+  }, []);
+
+  const registerCustomerFn = useCallback(async (body: RegisterCustomerBody) => {
+    const result = await apiRegisterCustomer(body);
     setUser(result.user);
     return result;
   }, []);
@@ -67,8 +81,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, login, register, logout, setUser }),
-    [user, loading, login, register, logout],
+    () => ({
+      user,
+      loading,
+      login,
+      register: registerPartnerFn,
+      registerPartner: registerPartnerFn,
+      registerCustomer: registerCustomerFn,
+      logout,
+      setUser,
+    }),
+    [user, loading, login, registerPartnerFn, registerCustomerFn, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -13,7 +13,10 @@ export interface CreateReservationBody {
 }
 
 export function createReservation(body: CreateReservationBody) {
-  return apiRequest<unknown>("/api/reservations", { method: "POST", body, auth: false });
+  // The endpoint accepts both anonymous and authenticated requests. When the
+  // visitor is logged in as a CUSTOMER, sending the bearer token lets the
+  // backend attach `userId` so the reservation appears in their account.
+  return apiRequest<unknown>("/api/reservations", { method: "POST", body });
 }
 
 export interface PartnerReservation {

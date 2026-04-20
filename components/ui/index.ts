@@ -1,6 +1,7 @@
 export { Spinner, PageSpinner } from "./Spinner";
 export { Alert } from "./Alert";
 export { Button } from "./Button";
+export { Chip } from "./Chip";
 export { Card, StatCard } from "./Card";
 export { FormField, Input, Select, Textarea } from "./Input";
 export { Pagination } from "./Pagination";

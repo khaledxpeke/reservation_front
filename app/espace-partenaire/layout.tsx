@@ -41,9 +41,7 @@ export default function EspacePartenaireLayout({ children }: { children: React.R
     <RequireRole roles={["PARTNER"]}>
       <div className="max-w-6xl mx-auto w-full">
         <SubNav />
-        <div className="animate-fade-in">
-          {children}
-        </div>
+        <div>{children}</div>
       </div>
     </RequireRole>
   );

@@ -1,5 +1,5 @@
 import { apiRequest, tokenStorage, setStoredUser } from "@/lib/api/client";
-import type { AuthUser, LoginResult } from "@/lib/api/types";
+import type { AuthUser, Gender, LoginResult } from "@/lib/api/types";
 
 export interface RegisterBody {
   email: string;
@@ -11,6 +11,18 @@ export interface RegisterBody {
   categoryId: string;
 }
 
+export interface RegisterCustomerBody {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  gender: Gender;
+  /** YYYY-MM-DD */
+  dob: string;
+  phone: string;
+  region?: string;
+}
+
 export interface LoginBody {
   email: string;
   password: string;
@@ -18,6 +30,16 @@ export interface LoginBody {
 
 export async function registerPartner(body: RegisterBody): Promise<LoginResult> {
   const data = await apiRequest<LoginResult>("/api/auth/register", {
+    method: "POST",
+    body,
+    auth: false,
+  });
+  persistSession(data);
+  return data;
+}
+
+export async function registerCustomer(body: RegisterCustomerBody): Promise<LoginResult> {
+  const data = await apiRequest<LoginResult>("/api/auth/register-customer", {
     method: "POST",
     body,
     auth: false,

@@ -1,24 +1,21 @@
 "use client";
 
-import { RequireRole } from "@/components/auth/RequireRole";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { RequireRole } from "@/components/auth/RequireRole";
 
-const adminLinks = [
-  { href: "/admin", label: "Vue d'ensemble", exact: true },
-  { href: "/admin/utilisateurs", label: "Utilisateurs" },
-  { href: "/admin/partenaires", label: "Partenaires" },
-  { href: "/admin/reservations", label: "Réservations" },
-  { href: "/admin/offres", label: "Offres" },
-  { href: "/admin/categories", label: "Catégories" },
-  { href: "/admin/packs", label: "Packs" },
+const customerLinks = [
+  { href: "/mon-compte", label: "Tableau de bord", exact: true },
+  { href: "/mon-compte/reservations", label: "Mes réservations" },
+  { href: "/mon-compte/parties", label: "Mes parties" },
+  { href: "/mon-compte/profil", label: "Profil" },
 ];
 
 function SubNav() {
   const pathname = usePathname();
   return (
     <nav className="mb-12 flex flex-wrap gap-6 border-b border-zinc-100 pb-0">
-      {adminLinks.map(({ href, label, exact }) => {
+      {customerLinks.map(({ href, label, exact }) => {
         const active = exact ? pathname === href : pathname.startsWith(href);
         return (
           <Link
@@ -38,10 +35,14 @@ function SubNav() {
   );
 }
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function MonCompteLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <RequireRole roles={["SUPER_ADMIN"]}>
-      <div className="max-w-6xl mx-auto w-full">
+    <RequireRole roles={["CUSTOMER"]}>
+      <div className="mx-auto w-full max-w-6xl">
         <SubNav />
         <div>{children}</div>
       </div>

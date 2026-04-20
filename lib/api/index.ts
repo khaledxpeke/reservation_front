@@ -11,4 +11,7 @@ export * from "@/lib/api/partners";
 export * from "@/lib/api/users";
 export * from "@/lib/api/resources";
 export * from "@/lib/api/availabilities";
+export * from "@/lib/api/customers";
+export * from "@/lib/api/matches";
+export * from "@/lib/api/notifications";
 export * from "@/lib/api/health";

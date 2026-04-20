@@ -21,7 +21,13 @@ export default function ConnexionPage() {
     setError(null);
     try {
       const r = await login({ email, password });
-      router.replace(r.user.role === "SUPER_ADMIN" ? "/admin" : "/espace-partenaire");
+      const dest =
+        r.user.role === "SUPER_ADMIN"
+          ? "/admin"
+          : r.user.role === "CUSTOMER"
+            ? "/mon-compte"
+            : "/espace-partenaire";
+      router.replace(dest);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Connexion impossible.");
     } finally {
@@ -33,7 +39,7 @@ export default function ConnexionPage() {
     <div className="mx-auto w-full max-w-sm pt-8">
       <div className="rounded-xl border border-zinc-100 bg-white p-8 shadow-sm">
         <h1 className="text-xl font-semibold text-zinc-900">Connexion</h1>
-        <p className="mt-1 text-sm text-zinc-500">Accès partenaire et administrateur.</p>
+        <p className="mt-1 text-sm text-zinc-500">Accès joueurs, partenaires et administrateurs.</p>
 
         <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4">
           <FormField label="E-mail">
@@ -66,7 +72,7 @@ export default function ConnexionPage() {
       <p className="mt-5 text-center text-sm text-zinc-500">
         Pas encore de compte ?{" "}
         <Link href="/inscription" className="font-medium text-emerald-600 hover:underline">
-          S&apos;inscrire comme partenaire
+          Créer un compte
         </Link>
       </p>
     </div>

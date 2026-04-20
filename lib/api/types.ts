@@ -1,4 +1,20 @@
-export type UserRole = "SUPER_ADMIN" | "PARTNER";
+export type UserRole = "SUPER_ADMIN" | "PARTNER" | "CUSTOMER";
+
+export type Gender = "MALE" | "FEMALE" | "OTHER";
+
+export interface CustomerProfile {
+  id: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  gender: Gender;
+  /** ISO date string (YYYY-MM-DD or full ISO) */
+  dob: string;
+  phone: string;
+  region: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface ApiErrorBody {
   code: string;
@@ -19,7 +35,7 @@ export interface AuthUser {
   id: string;
   email: string;
   role: UserRole;
-  partner: {
+  partner?: {
     id: string;
     name: string;
     city: string;
@@ -31,6 +47,7 @@ export interface AuthUser {
     isVerified: boolean;
     packId: string | null;
   } | null;
+  customerProfile?: CustomerProfile | null;
 }
 
 export interface LoginResult {
