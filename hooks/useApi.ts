@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ApiError } from "@/lib/api/types";
+import { getApiErrorMessage } from "@/lib/api/errors";
 
 interface UseApiState<T> {
   data: T | null;
@@ -46,7 +46,7 @@ export function useApi<T>(
         setState({
           data: null,
           loading: false,
-          error: e instanceof ApiError ? e.message : "Une erreur est survenue.",
+          error: getApiErrorMessage(e),
         });
       }
     }
@@ -93,7 +93,7 @@ export function useMutation<TArgs extends unknown[], TResult = unknown>(
         const result = await mutationFn(...args);
         return result;
       } catch (e) {
-        const msg = e instanceof ApiError ? e.message : "Une erreur est survenue.";
+        const msg = getApiErrorMessage(e);
         setError(msg);
         return null;
       } finally {

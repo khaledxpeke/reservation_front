@@ -1,13 +1,5 @@
 import { apiRequest } from "@/lib/api/client";
-
-export type DayOfWeek =
-  | "MONDAY"
-  | "TUESDAY"
-  | "WEDNESDAY"
-  | "THURSDAY"
-  | "FRIDAY"
-  | "SATURDAY"
-  | "SUNDAY";
+import type { DayOfWeek } from "@/lib/api/offers";
 
 export interface AvailabilityEntry {
   dayOfWeek: DayOfWeek;

@@ -16,13 +16,26 @@ const styles: Record<Variant, string> = {
 export function Alert({
   variant = "error",
   children,
+  hint,
 }: {
   variant?: Variant;
   children: ReactNode;
+  hint?: string | null;
 }) {
+  const showHint = variant === "error" && hint;
+
   return (
-    <p className={`rounded-lg border px-4 py-3 text-sm ${styles[variant]}`}>
-      {children}
-    </p>
+    <div className={`flex items-start justify-between gap-3 rounded-lg border px-4 py-3 text-sm ${styles[variant]}`}>
+      <p>{children}</p>
+      {showHint ? (
+        <span
+          className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-current text-xs font-bold opacity-70"
+          title={hint}
+          aria-label="Détails de l'erreur"
+        >
+          ?
+        </span>
+      ) : null}
+    </div>
   );
 }

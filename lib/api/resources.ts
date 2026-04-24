@@ -42,7 +42,7 @@ export interface UpdateResourceBody {
   minBookingDuration?: number | null;
   maxBookingDuration?: number | null;
   bufferTimeMin?: number;
-  price?: number;
+  price?: number | null;
 }
 
 export function updateResource(id: string, body: UpdateResourceBody) {

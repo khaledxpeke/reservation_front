@@ -16,25 +16,28 @@ export default function MonCompteDashboardPage() {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    Promise.all([
-      listMyReservations({ scope: "upcoming", limit: 5, page: 1 }),
-      listMyReservations({ scope: "past", limit: 1, page: 1 }),
-    ])
-      .then(([up, past]) => {
-        if (cancelled) return;
-        setUpcoming(up.items);
-        setCounts({ upcoming: up.pagination.total, past: past.pagination.total });
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setError(err instanceof ApiError ? err.message : "Erreur de chargement.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    const task = setTimeout(() => {
+      setLoading(true);
+      Promise.all([
+        listMyReservations({ scope: "upcoming", limit: 5, page: 1 }),
+        listMyReservations({ scope: "past", limit: 1, page: 1 }),
+      ])
+        .then(([up, past]) => {
+          if (cancelled) return;
+          setUpcoming(up.items);
+          setCounts({ upcoming: up.pagination.total, past: past.pagination.total });
+        })
+        .catch((err) => {
+          if (cancelled) return;
+          setError(err instanceof ApiError ? err.message : "Erreur de chargement.");
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    }, 0);
     return () => {
       cancelled = true;
+      clearTimeout(task);
     };
   }, []);
 

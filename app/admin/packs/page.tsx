@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { createPack, deletePack, listPacks, type Pack } from "@/lib/api/packs";
 import { useApi, useMutation } from "@/hooks/useApi";
-import { Alert, Button, Card, FormField, Input, PageHeader } from "@/components/ui";
+import { Alert, Button, Card, FormField, Input, PageHeader, useConfirmDialog } from "@/components/ui";
 import { PageSpinner } from "@/components/ui/Spinner";
 
 export default function AdminPacksPage() {
@@ -11,6 +11,7 @@ export default function AdminPacksPage() {
   const { data: packs, loading, error, reload } = useApi<Pack[]>(fetcher);
   const createMut = useMutation(createPack);
   const deleteMut = useMutation(deletePack);
+  const { confirm: confirmDialog, dialog } = useConfirmDialog();
 
   const [name, setName] = useState("");
   const [maxResources, setMaxResources] = useState(5);
@@ -23,13 +24,19 @@ export default function AdminPacksPage() {
   };
 
   const onDelete = async (id: string) => {
-    if (!confirm("Supprimer ce pack ?")) return;
+    const confirmed = await confirmDialog({
+      title: "Supprimer ce pack ?",
+      description: "Les partenaires associés pourraient perdre les limites de ce pack.",
+      confirmLabel: "Supprimer",
+    });
+    if (!confirmed) return;
     const ok = await deleteMut.execute(id);
     if (ok !== null) reload();
   };
 
   return (
     <div>
+      {dialog}
       <PageHeader title="Packs" />
       <form onSubmit={onCreate} className="mt-6 flex max-w-2xl flex-wrap items-end gap-4">
         <FormField label="Nom">

@@ -44,22 +44,37 @@ export function NotificationBell() {
   // Poll unread count while user is logged in
   useEffect(() => {
     if (!user) return;
-    void fetchCount();
+    const initial = setTimeout(() => void fetchCount(), 0);
     const id = setInterval(fetchCount, POLL_MS);
-    return () => clearInterval(id);
+    return () => {
+      clearTimeout(initial);
+      clearInterval(id);
+    };
   }, [user, fetchCount]);
 
   // Fetch recent notifications when panel opens
   useEffect(() => {
     if (!open) return;
-    setFetching(true);
-    listNotifications({ limit: 15, page: 1 })
-      .then((res) => {
-        setItems(res.items);
-        setUnread(res.unreadCount);
-      })
-      .catch(() => {})
-      .finally(() => setFetching(false));
+    let cancelled = false;
+    const task = setTimeout(() => {
+      setFetching(true);
+      listNotifications({ limit: 15, page: 1 })
+        .then((res) => {
+          if (cancelled) return;
+          setItems(res.items);
+          setUnread(res.unreadCount);
+        })
+        .catch(() => {
+          /* ignore notification refresh failures */
+        })
+        .finally(() => {
+          if (!cancelled) setFetching(false);
+        });
+    }, 0);
+    return () => {
+      cancelled = true;
+      clearTimeout(task);
+    };
   }, [open]);
 
   // Close panel on outside click
@@ -84,7 +99,9 @@ export function NotificationBell() {
           ),
         );
         setUnread((c) => Math.max(0, c - 1));
-      } catch {}
+      } catch {
+        /* ignore notification read failures */
+      }
     }
     setOpen(false);
   };
@@ -96,7 +113,9 @@ export function NotificationBell() {
         prev.map((x) => (x.readAt ? x : { ...x, readAt: new Date().toISOString() })),
       );
       setUnread(0);
-    } catch {}
+    } catch {
+      /* ignore notification read failures */
+    }
   };
 
   if (loading || !user) return null;

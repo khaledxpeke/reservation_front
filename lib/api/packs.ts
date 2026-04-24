@@ -1,5 +1,4 @@
 import { apiRequest } from "@/lib/api/client";
-import type { Paginated } from "@/lib/api/types";
 
 export interface Pack {
   id: string;

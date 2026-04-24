@@ -106,7 +106,8 @@ function CreatedTab() {
   }, []);
 
   useEffect(() => {
-    void load();
+    const task = setTimeout(() => void load(), 0);
+    return () => clearTimeout(task);
   }, [load]);
 
   if (loading) {
@@ -186,22 +187,25 @@ function RequestsTab() {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
-    listMyJoinRequests({ limit: 50, page: 1 })
-      .then((res) => {
-        if (cancelled) return;
-        setItems(res.items);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setError(err instanceof ApiError ? err.message : "Chargement impossible.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    const task = setTimeout(() => {
+      setLoading(true);
+      setError(null);
+      listMyJoinRequests({ limit: 50, page: 1 })
+        .then((res) => {
+          if (cancelled) return;
+          setItems(res.items);
+        })
+        .catch((err) => {
+          if (cancelled) return;
+          setError(err instanceof ApiError ? err.message : "Chargement impossible.");
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    }, 0);
     return () => {
       cancelled = true;
+      clearTimeout(task);
     };
   }, []);
 

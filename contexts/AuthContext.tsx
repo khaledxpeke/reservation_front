@@ -10,6 +10,9 @@ import {
   type ReactNode,
 } from "react";
 import {
+  type LoginBody,
+  type RegisterBody,
+  type RegisterCustomerBody,
   login as apiLogin,
   logout as apiLogout,
   registerPartner,
@@ -18,11 +21,6 @@ import {
 } from "@/lib/api/auth";
 import { setStoredUser, tokenStorage } from "@/lib/api/client";
 import type { AuthUser, LoginResult } from "@/lib/api/types";
-import type {
-  LoginBody,
-  RegisterBody,
-  RegisterCustomerBody,
-} from "@/lib/api/auth";
 
 interface AuthContextValue {
   user: AuthUser | null;

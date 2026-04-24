@@ -1,4 +1,4 @@
-import { ApiError } from "@/lib/api/types";
+import { ApiError, type ApiErrorBody } from "@/lib/api/types";
 
 const ACCESS = "padel_access_token";
 const REFRESH = "padel_refresh_token";
@@ -58,7 +58,7 @@ interface RawSuccess<T> {
 
 interface RawFail {
   success: false;
-  error: { code: string; message: string };
+  error: ApiErrorBody;
 }
 
 async function tryRefresh(): Promise<boolean> {
@@ -74,6 +74,10 @@ async function tryRefresh(): Promise<boolean> {
   const json = (await res.json()) as RawSuccess<{ accessToken: string; refreshToken: string }> | RawFail;
   if (!res.ok || !("success" in json) || !json.success) {
     tokenStorage.clear();
+    // If the account was blocked mid-session, redirect to login with a flag
+    if (!json.success && json.error?.code === "ACCOUNT_BLOCKED" && typeof window !== "undefined") {
+      window.location.href = "/connexion?bloque=1";
+    }
     return false;
   }
   tokenStorage.setTokens(json.data.accessToken, json.data.refreshToken);
@@ -127,7 +131,8 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     const code = err.success === false ? err.error.code : "HTTP_ERROR";
     const message =
       err.success === false ? err.error.message : `Erreur HTTP ${res.status}`;
-    throw new ApiError(res.status, code, message);
+    const details = err.success === false ? err.error.details : undefined;
+    throw new ApiError(res.status, code, message, details);
   }
 
   return json.data;

@@ -19,6 +19,12 @@ export interface CustomerProfile {
 export interface ApiErrorBody {
   code: string;
   message: string;
+  details?: ApiErrorDetail[];
+}
+
+export interface ApiErrorDetail {
+  field?: string;
+  message: string;
 }
 
 export interface Paginated<T> {
@@ -59,11 +65,13 @@ export interface LoginResult {
 export class ApiError extends Error {
   readonly code: string;
   readonly status: number;
+  readonly details?: ApiErrorDetail[];
 
-  constructor(status: number, code: string, message: string) {
+  constructor(status: number, code: string, message: string, details?: ApiErrorDetail[]) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.code = code;
+    this.details = details;
   }
 }

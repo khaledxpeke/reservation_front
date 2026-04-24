@@ -1,16 +1,45 @@
 import { apiRequest } from "@/lib/api/client";
 import type { Paginated } from "@/lib/api/types";
 
+export type OfferRecurrence = "NONE" | "DAILY" | "WEEKDAY" | "WEEKEND" | "WEEKLY";
+export type DayOfWeek = "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
+
+export const RECURRENCE_LABELS: Record<OfferRecurrence, string> = {
+  NONE:    "Ponctuelle",
+  DAILY:   "Chaque jour",
+  WEEKDAY: "Jours ouvrables (lun – ven)",
+  WEEKEND: "Week-end (sam – dim)",
+  WEEKLY:  "Jours spécifiques",
+};
+
+export const DAY_LABELS: Record<DayOfWeek, string> = {
+  MONDAY:    "Lun",
+  TUESDAY:   "Mar",
+  WEDNESDAY: "Mer",
+  THURSDAY:  "Jeu",
+  FRIDAY:    "Ven",
+  SATURDAY:  "Sam",
+  SUNDAY:    "Dim",
+};
+
+export const ALL_DAYS: DayOfWeek[] = [
+  "MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY","SUNDAY",
+];
+
 export interface Offer {
   id: string;
   title: string;
   description: string | null;
   discountPercent: number;
-  validFrom: string;
-  validUntil: string;
+  validFrom: string | null;
+  validUntil: string | null;
+  recurrence: OfferRecurrence;
+  recurrenceDays: DayOfWeek[];
+  timeStart: string | null;
+  timeEnd: string | null;
   approvalStatus: string;
   partnerId?: string;
-  partner?: { name: string; city: string };
+  partner?: { name: string; city: string; logo: string | null; coverImage: string | null };
 }
 
 export interface ListOffersParams {
@@ -41,8 +70,14 @@ export interface CreateOfferBody {
   title: string;
   description?: string;
   discountPercent: number;
-  validFrom: string;
-  validUntil: string;
+  // One-shot
+  validFrom?: string;
+  validUntil?: string;
+  // Recurring
+  recurrence?: OfferRecurrence;
+  recurrenceDays?: DayOfWeek[];
+  timeStart?: string;
+  timeEnd?: string;
 }
 
 export function createOffer(body: CreateOfferBody) {

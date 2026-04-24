@@ -78,5 +78,5 @@ export interface AdminReservationStats {
 }
 
 export function getAdminReservationStats() {
-  return apiRequest<AdminReservationStats>("/api/reservations/admin");
+  return apiRequest<AdminReservationStats>("/api/reservations/admin/stats");
 }

@@ -48,7 +48,7 @@ export function MarketplaceHome() {
   const [categoryId, setCategoryId] = useState("");
   const [subCategoryId, setSubCategoryId] = useState("");
   const [governorate, setGovernorate] = useState("");
-  const [city, setCity] = useState("");
+  const city = "";
 
   const [dateOffset, setDateOffset] = useState(0);
   const [selectedDate, setSelectedDate] = useState(todayISO);

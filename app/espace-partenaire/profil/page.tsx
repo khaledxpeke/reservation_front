@@ -4,13 +4,14 @@ import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { setStoredUser } from "@/lib/api/client";
+import { getApiErrorHint, getApiErrorMessage } from "@/lib/api/errors";
 import { getPartner, updatePartner, type PartnerProfile } from "@/lib/api/partners";
-import { ApiError } from "@/lib/api/types";
 import { Alert, Button, Card, FormField, Input, PageHeader } from "@/components/ui";
 import { PageSpinner } from "@/components/ui/Spinner";
 import { CloudinaryUploadButton } from "@/components/cloudinary/CloudinaryUploadButton";
 import { isCloudinaryConfigured } from "@/components/cloudinary/cloudinaryUtils";
 import { partnerHeroUrl, partnerLogoUrl } from "@/lib/imageUrls";
+import { IMAGE_URL_MAX_LENGTH } from "@/lib/validation";
 
 export default function PartnerProfilPage() {
   const { user, setUser } = useAuth();
@@ -19,6 +20,7 @@ export default function PartnerProfilPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorHint, setErrorHint] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [profile, setProfile] = useState<PartnerProfile | null>(null);
 
@@ -33,6 +35,7 @@ export default function PartnerProfilPage() {
     if (!partnerId) return;
     setLoading(true);
     setError(null);
+    setErrorHint(null);
     try {
       const p = await getPartner(partnerId);
       setProfile(p);
@@ -43,7 +46,8 @@ export default function PartnerProfilPage() {
       setLogo(p.logo);
       setCoverImage(p.coverImage);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Chargement impossible.");
+      setError(getApiErrorMessage(e, "Chargement impossible."));
+      setErrorHint(getApiErrorHint(e));
     } finally {
       setLoading(false);
     }
@@ -58,6 +62,7 @@ export default function PartnerProfilPage() {
     if (!partnerId) return;
     setSaving(true);
     setError(null);
+    setErrorHint(null);
     try {
       const updated = await updatePartner(partnerId, {
         name,
@@ -86,7 +91,8 @@ export default function PartnerProfilPage() {
       }
       setSuccess(true);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Enregistrement impossible.");
+      setError(getApiErrorMessage(err, "Enregistrement impossible."));
+      setErrorHint(getApiErrorHint(err));
     } finally {
       setSaving(false);
     }
@@ -96,16 +102,18 @@ export default function PartnerProfilPage() {
     return (
       <div>
         <PageHeader title="Profil" />
-        <Alert>Session invalide.</Alert>
+        <Alert hint="Reconnectez-vous puis réessayez.">Session invalide.</Alert>
       </div>
     );
   }
 
   if (loading || !profile) {
     return (
-      <div>
+      <div className="space-y-6">
         <PageHeader title="Profil club" description="Logo, bannière et coordonnées affichés sur la place de marché." />
-        <PageSpinner />
+        <Card className="flex min-h-64 items-center justify-center">
+          <PageSpinner />
+        </Card>
       </div>
     );
   }
@@ -117,15 +125,15 @@ export default function PartnerProfilPage() {
   };
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Profil club"
         description="Les images sont hébergées sur Cloudinary (recommandé) : uploadez, puis l’URL est enregistrée ici. Sinon collez une URL https."
       />
 
       {!isCloudinaryConfigured() && (
-        <div className="mt-4">
-          <Alert>
+        <div>
+          <Alert variant="info">
             Pour uploader depuis l’interface : créez un compte{" "}
             <a href="https://cloudinary.com/users/register_free" className="underline" target="_blank" rel="noreferrer">
               Cloudinary (gratuit)
@@ -140,17 +148,17 @@ export default function PartnerProfilPage() {
       )}
 
       {success && (
-        <div className="mt-4">
+        <div>
           <Alert variant="success">Modifications enregistrées avec succès.</Alert>
         </div>
       )}
       {error && (
-        <div className="mt-4">
-          <Alert>{error}</Alert>
+        <div>
+          <Alert hint={errorHint}>{error}</Alert>
         </div>
       )}
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <Card className="overflow-hidden p-0">
           <div className="relative h-40 bg-zinc-100">
             <Image
@@ -170,58 +178,85 @@ export default function PartnerProfilPage() {
               />
             </div>
           </div>
-          <div className="p-4 text-xs text-zinc-500">Aperçu (place de marché & fiche club)</div>
+          <div className="space-y-1 p-4">
+            <p className="text-sm font-semibold text-zinc-900">{name}</p>
+            <p className="text-xs text-zinc-500">Aperçu public sur la place de marché et la fiche club.</p>
+          </div>
         </Card>
 
-        <form onSubmit={(e) => void onSave(e)} className="space-y-4">
-          <FormField label="Logo (URL https)">
-            <div className="flex flex-wrap gap-2">
-              <Input
-                type="url"
-                placeholder="https://res.cloudinary.com/…"
-                value={logo ?? ""}
-                onChange={(e) => setLogo(e.target.value || null)}
-                className="min-w-0 flex-1"
-              />
-              <CloudinaryUploadButton
-                label="Uploader (Cloudinary)"
-                onUploaded={(url) => setLogo(url)}
-              />
+        <form onSubmit={(e) => void onSave(e)} className="space-y-5">
+          <Card className="space-y-4">
+            <div>
+              <h2 className="text-sm font-semibold text-zinc-900">Images du club</h2>
+              <p className="mt-1 text-xs text-zinc-500">
+                Utilisez des URL HTTPS courtes. Limite: {IMAGE_URL_MAX_LENGTH} caractères.
+              </p>
             </div>
-          </FormField>
 
-          <FormField label="Bannière / cover (URL https)">
-            <div className="flex flex-wrap gap-2">
-              <Input
-                type="url"
-                placeholder="https://res.cloudinary.com/…"
-                value={coverImage ?? ""}
-                onChange={(e) => setCoverImage(e.target.value || null)}
-                className="min-w-0 flex-1"
-              />
-              <CloudinaryUploadButton
-                label="Uploader (Cloudinary)"
-                onUploaded={(url) => setCoverImage(url)}
-              />
+            <FormField label="Logo (URL https)">
+              <div className="flex flex-wrap gap-2">
+                <Input
+                  type="url"
+                  placeholder="https://res.cloudinary.com/…"
+                  maxLength={IMAGE_URL_MAX_LENGTH}
+                  value={logo ?? ""}
+                  onChange={(e) => setLogo(e.target.value || null)}
+                  className="min-w-0 flex-1"
+                />
+                <CloudinaryUploadButton
+                  label="Uploader"
+                  onUploaded={(url) => setLogo(url)}
+                />
+              </div>
+            </FormField>
+
+            <FormField label="Bannière (URL https)">
+              <div className="flex flex-wrap gap-2">
+                <Input
+                  type="url"
+                  placeholder="https://res.cloudinary.com/…"
+                  maxLength={IMAGE_URL_MAX_LENGTH}
+                  value={coverImage ?? ""}
+                  onChange={(e) => setCoverImage(e.target.value || null)}
+                  className="min-w-0 flex-1"
+                />
+                <CloudinaryUploadButton
+                  label="Uploader"
+                  onUploaded={(url) => setCoverImage(url)}
+                />
+              </div>
+            </FormField>
+          </Card>
+
+          <Card className="space-y-4">
+            <div>
+              <h2 className="text-sm font-semibold text-zinc-900">Coordonnées</h2>
+              <p className="mt-1 text-xs text-zinc-500">
+                Ces informations aident les joueurs à identifier et contacter votre club.
+              </p>
             </div>
-          </FormField>
 
-          <FormField label="Nom du club">
-            <Input required value={name} onChange={(e) => setName(e.target.value)} />
-          </FormField>
-          <FormField label="Ville">
-            <Input required value={city} onChange={(e) => setCity(e.target.value)} />
-          </FormField>
-          <FormField label="Téléphone">
-            <Input required value={phone} onChange={(e) => setPhone(e.target.value)} />
-          </FormField>
-          <FormField label="Adresse">
-            <Input value={address} onChange={(e) => setAddress(e.target.value)} />
-          </FormField>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField label="Nom du club">
+                <Input required value={name} onChange={(e) => setName(e.target.value)} />
+              </FormField>
+              <FormField label="Ville">
+                <Input required value={city} onChange={(e) => setCity(e.target.value)} />
+              </FormField>
+              <FormField label="Téléphone">
+                <Input required value={phone} onChange={(e) => setPhone(e.target.value)} />
+              </FormField>
+              <FormField label="Adresse">
+                <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+              </FormField>
+            </div>
 
-          <Button type="submit" loading={saving}>
-            Enregistrer
-          </Button>
+            <div className="flex justify-end">
+              <Button type="submit" loading={saving}>
+                Enregistrer
+              </Button>
+            </div>
+          </Card>
         </form>
       </div>
     </div>

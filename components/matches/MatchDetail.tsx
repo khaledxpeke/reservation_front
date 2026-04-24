@@ -23,6 +23,7 @@ import {
   Button,
   Spinner,
   Textarea,
+  useConfirmDialog,
 } from "@/components/ui";
 import { ApiError } from "@/lib/api/types";
 
@@ -51,6 +52,7 @@ export function MatchDetail({ id }: { id: string }) {
   const [joinMessage, setJoinMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [respondingId, setRespondingId] = useState<string | null>(null);
+  const { confirm: confirmDialog, dialog } = useConfirmDialog();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -138,7 +140,12 @@ export function MatchDetail({ id }: { id: string }) {
 
   const onCancelPost = async () => {
     if (!post) return;
-    if (!confirm("Annuler cette annonce ?")) return;
+    const confirmed = await confirmDialog({
+      title: "Annuler cette annonce ?",
+      description: "Les joueurs ne pourront plus demander à rejoindre cette partie.",
+      confirmLabel: "Annuler l'annonce",
+    });
+    if (!confirmed) return;
     setActionError(null);
     setActionMessage(null);
     setSubmitting(true);
@@ -178,6 +185,7 @@ export function MatchDetail({ id }: { id: string }) {
 
   return (
     <article className="grid gap-6 lg:grid-cols-3">
+      {dialog}
       <div className="lg:col-span-2 space-y-6">
         <header className="rounded-2xl border border-zinc-200 bg-white p-5">
           <div className="flex items-start justify-between gap-3">

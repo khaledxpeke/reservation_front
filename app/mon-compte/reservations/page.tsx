@@ -13,6 +13,7 @@ import {
   PageHeader,
   Spinner,
   StatusBadge,
+  useConfirmDialog,
 } from "@/components/ui";
 import { ApiError } from "@/lib/api/types";
 
@@ -25,6 +26,7 @@ export default function MesReservationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const { confirm: confirmDialog, dialog } = useConfirmDialog();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -44,7 +46,12 @@ export default function MesReservationsPage() {
   }, [load]);
 
   const onCancel = async (id: string) => {
-    if (!confirm("Annuler cette réservation ?")) return;
+    const confirmed = await confirmDialog({
+      title: "Annuler cette réservation ?",
+      description: "Le partenaire sera informé du changement de statut.",
+      confirmLabel: "Annuler la réservation",
+    });
+    if (!confirmed) return;
     setCancellingId(id);
     setError(null);
     setSuccessMessage(null);
@@ -69,6 +76,7 @@ export default function MesReservationsPage() {
 
   return (
     <div className="space-y-6">
+      {dialog}
       <PageHeader
         title="Mes réservations"
         description="Suivez vos réservations à venir et passées."
