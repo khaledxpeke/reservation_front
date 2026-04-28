@@ -9,6 +9,7 @@ import {
   MATCH_STATUS_LABEL,
   REQUEST_STATUS_LABEL,
   SKILL_LEVEL_LABEL,
+  SPORT_LABEL,
   cancelMatch,
   getMatch,
   joinMatch,
@@ -215,6 +216,9 @@ export function MatchDetail({ id }: { id: string }) {
           </div>
 
           <div className="mt-4 flex flex-wrap gap-1.5 text-xs">
+            <span className="rounded-md bg-violet-50 px-2 py-1 font-medium text-violet-700">
+              {SPORT_LABEL[post.sport]}
+            </span>
             <span className="rounded-md bg-emerald-50 px-2 py-1 font-medium text-emerald-700">
               Niveau : {SKILL_LEVEL_LABEL[post.skillLevel]}
             </span>
@@ -291,6 +295,8 @@ export function MatchDetail({ id }: { id: string }) {
             ) : myRequest ? (
               <MyRequestStatus
                 request={myRequest}
+                creatorPhone={post.creator.customerProfile?.phone}
+                creatorEmail={post.creator.email}
                 onWithdraw={onWithdraw}
                 disabled={submitting}
               />
@@ -370,10 +376,14 @@ function CreatorActions({
 
 function MyRequestStatus({
   request,
+  creatorPhone,
+  creatorEmail,
   onWithdraw,
   disabled,
 }: {
   request: MatchJoinRequest;
+  creatorPhone?: string;
+  creatorEmail?: string;
   onWithdraw: () => void;
   disabled: boolean;
 }) {
@@ -394,10 +404,12 @@ function MyRequestStatus({
         </Badge>
       </div>
       {request.status === "ACCEPTED" ? (
-        <p className="text-xs text-emerald-700">
-          Votre demande a été acceptée. Les coordonnées de l&apos;organisateur
-          sont visibles ci-dessous.
-        </p>
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 space-y-2">
+          <p className="text-xs font-medium text-emerald-800">
+            Demande acceptée — coordonnées de l&apos;organisateur :
+          </p>
+          <ContactInfoBlock phone={creatorPhone} email={creatorEmail} />
+        </div>
       ) : null}
       {request.message ? (
         <p className="rounded-md bg-zinc-50 p-2 text-xs text-zinc-600">

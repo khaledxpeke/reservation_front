@@ -5,6 +5,7 @@ export type SkillLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
 export type GenderPreference = "ANY" | "MALE" | "FEMALE";
 export type MatchPostStatus = "OPEN" | "CLOSED" | "CANCELLED";
 export type MatchRequestStatus = "PENDING" | "ACCEPTED" | "DECLINED";
+export type SportType = "PADEL" | "TENNIS" | "FOOTBALL" | "BASKETBALL" | "VOLLEYBALL" | "OTHER";
 
 export interface MatchCreatorPublic {
   id: string;
@@ -38,6 +39,7 @@ export interface MatchPostListItem {
   governorate: string | null;
   city: string | null;
   neededPlayers: number;
+  sport: SportType;
   genderPref: GenderPreference;
   skillLevel: SkillLevel;
   description: string | null;
@@ -68,6 +70,7 @@ export interface ListMatchesParams {
   governorate?: string;
   skillLevel?: SkillLevel;
   genderPref?: GenderPreference;
+  sport?: SportType;
   date?: string;
   dateFrom?: string;
   dateTo?: string;
@@ -80,6 +83,7 @@ export interface CreateMatchPostBody {
   governorate?: string;
   city?: string;
   neededPlayers: number;
+  sport?: SportType;
   genderPref?: GenderPreference;
   skillLevel: SkillLevel;
   description?: string;
@@ -97,7 +101,7 @@ export function listMatches(params: ListMatchesParams = {}) {
 }
 
 export function getMatch(id: string) {
-  return apiRequest<MatchPostDetail>(`/api/matches/${id}`, { auth: false });
+  return apiRequest<MatchPostDetail>(`/api/matches/${id}`);
 }
 
 export function createMatch(body: CreateMatchPostBody) {
@@ -183,4 +187,13 @@ export const REQUEST_STATUS_LABEL: Record<MatchRequestStatus, string> = {
   PENDING: "En attente",
   ACCEPTED: "Acceptée",
   DECLINED: "Refusée",
+};
+
+export const SPORT_LABEL: Record<SportType, string> = {
+  PADEL: "Padel",
+  TENNIS: "Tennis",
+  FOOTBALL: "Football",
+  BASKETBALL: "Basketball",
+  VOLLEYBALL: "Volleyball",
+  OTHER: "Autre",
 };

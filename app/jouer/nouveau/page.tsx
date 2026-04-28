@@ -7,9 +7,11 @@ import { RequireRole } from "@/components/auth/RequireRole";
 import {
   GENDER_PREF_LABEL,
   SKILL_LEVEL_LABEL,
+  SPORT_LABEL,
   createMatch,
   type GenderPreference,
   type SkillLevel,
+  type SportType,
 } from "@/lib/api/matches";
 import { TUNISIA_GOVERNORATES } from "@/lib/tunisiaGovernorates";
 import {
@@ -49,6 +51,7 @@ function NouvelleAnnonceForm() {
   const [governorate, setGovernorate] = useState(defaultRegion);
   const [city, setCity] = useState("");
   const [neededPlayers, setNeededPlayers] = useState(3);
+  const [sport, setSport] = useState<SportType>("PADEL");
   const [genderPref, setGenderPref] = useState<GenderPreference>("ANY");
   const [skillLevel, setSkillLevel] = useState<SkillLevel>("INTERMEDIATE");
   const [description, setDescription] = useState("");
@@ -76,6 +79,7 @@ function NouvelleAnnonceForm() {
         governorate: governorate || undefined,
         city: city.trim() || undefined,
         neededPlayers,
+        sport,
         genderPref,
         skillLevel,
         description: description.trim() || undefined,
@@ -117,6 +121,19 @@ function NouvelleAnnonceForm() {
             value={neededPlayers}
             onChange={(e) => setNeededPlayers(Number(e.target.value))}
           />
+        </FormField>
+
+        <FormField label="Sport">
+          <Select
+            value={sport}
+            onChange={(e) => setSport(e.target.value as SportType)}
+          >
+            {(["PADEL", "TENNIS", "FOOTBALL", "BASKETBALL", "VOLLEYBALL", "OTHER"] as SportType[]).map((s) => (
+              <option key={s} value={s}>
+                {SPORT_LABEL[s]}
+              </option>
+            ))}
+          </Select>
         </FormField>
 
         <FormField label="Heure de début">

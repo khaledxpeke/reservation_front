@@ -3,6 +3,7 @@ import {
   GENDER_PREF_LABEL,
   MATCH_STATUS_LABEL,
   SKILL_LEVEL_LABEL,
+  SPORT_LABEL,
   type MatchPostListItem,
 } from "@/lib/api/matches";
 import { Badge } from "@/components/ui";
@@ -51,6 +52,9 @@ export function MatchPostCard({ post }: { post: MatchPostListItem }) {
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5 text-xs">
+        <span className="rounded-md bg-violet-50 px-2 py-1 font-medium text-violet-700">
+          {SPORT_LABEL[post.sport]}
+        </span>
         <span className="rounded-md bg-zinc-100 px-2 py-1 font-medium text-zinc-700">
           {formatDate(post.date)}
         </span>

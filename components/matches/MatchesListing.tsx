@@ -6,11 +6,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   GENDER_PREF_LABEL,
   SKILL_LEVEL_LABEL,
+  SPORT_LABEL,
   listMatches,
   type GenderPreference,
   type ListMatchesParams,
   type MatchPostListItem,
   type SkillLevel,
+  type SportType,
 } from "@/lib/api/matches";
 import { TUNISIA_GOVERNORATES } from "@/lib/tunisiaGovernorates";
 import {
@@ -34,6 +36,7 @@ export function MatchesListing() {
   const [governorate, setGovernorate] = useState("");
   const [skillLevel, setSkillLevel] = useState<SkillLevel | "">("");
   const [genderPref, setGenderPref] = useState<GenderPreference | "">("");
+  const [sport, setSport] = useState<SportType | "">("");
   const [date, setDate] = useState("");
 
   const load = useCallback(async () => {
@@ -43,6 +46,7 @@ export function MatchesListing() {
     if (governorate) params.governorate = governorate;
     if (skillLevel) params.skillLevel = skillLevel;
     if (genderPref) params.genderPref = genderPref;
+    if (sport) params.sport = sport;
     if (date) params.date = date;
     try {
       const result = await listMatches(params);
@@ -52,7 +56,7 @@ export function MatchesListing() {
     } finally {
       setLoading(false);
     }
-  }, [governorate, skillLevel, genderPref, date]);
+  }, [governorate, skillLevel, genderPref, sport, date]);
 
   useEffect(() => {
     void load();
@@ -68,10 +72,11 @@ export function MatchesListing() {
     setGovernorate("");
     setSkillLevel("");
     setGenderPref("");
+    setSport("");
     setDate("");
   };
 
-  const hasFilters = !!(governorate || skillLevel || genderPref || date);
+  const hasFilters = !!(governorate || skillLevel || genderPref || sport || date);
 
   return (
     <div className="space-y-6">
@@ -87,7 +92,7 @@ export function MatchesListing() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 rounded-xl border border-zinc-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-zinc-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-5">
         <FormField label="Date">
           <Input
             type="date"
@@ -139,8 +144,23 @@ export function MatchesListing() {
           </Select>
         </FormField>
 
+        <FormField label="Sport">
+          <Select
+            value={sport}
+            onChange={(e) => setSport(e.target.value as SportType | "")}
+            size="sm"
+          >
+            <option value="">Tous les sports</option>
+            {(["PADEL", "TENNIS", "FOOTBALL", "BASKETBALL", "VOLLEYBALL", "OTHER"] as SportType[]).map((s) => (
+              <option key={s} value={s}>
+                {SPORT_LABEL[s]}
+              </option>
+            ))}
+          </Select>
+        </FormField>
+
         {hasFilters && (
-          <div className="sm:col-span-2 lg:col-span-4 flex justify-end">
+          <div className="sm:col-span-2 lg:col-span-5 flex justify-end">
             <Button variant="ghost" size="sm" onClick={resetFilters}>
               Réinitialiser les filtres
             </Button>
