@@ -61,7 +61,7 @@ export function CloudinaryUploadButton({
             type="button"
             onClick={() => open()}
             title="Uploader une image"
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-500 transition hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-900"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-zinc-200/90 bg-white text-zinc-400 transition hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-800"
           >
             <UploadIcon />
           </button>

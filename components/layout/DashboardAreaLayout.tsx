@@ -16,19 +16,19 @@ function DashboardSubNav({ links }: { links: DashboardNavLink[] }) {
   const pathname = usePathname();
 
   return (
-    <nav className="mb-12 flex flex-wrap gap-6 border-b border-zinc-100 pb-0">
+    <nav className="mb-5 flex flex-wrap gap-2 border-b border-zinc-100/90 pb-4">
       {links.map(({ href, label, exact }) => {
-        const active = exact ? pathname === href : pathname.startsWith(href);
+        const active = exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
 
         return (
           <Link
             key={href}
             href={href}
             prefetch={false}
-            className={`-mb-px border-b-2 py-3 text-sm font-medium tracking-wide transition-colors ${
+            className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
               active
-                ? "border-zinc-900 text-zinc-900"
-                : "border-transparent text-zinc-400 hover:text-zinc-900"
+                ? "bg-zinc-900 text-white shadow-md shadow-zinc-900/10"
+                : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
             }`}
           >
             {label}
@@ -50,9 +50,9 @@ export function DashboardAreaLayout({
 }) {
   return (
     <RequireRole roles={roles}>
-      <section className="mx-auto flex min-h-[60vh] w-full max-w-6xl flex-col">
+      <section className="mx-auto flex min-h-[50vh] w-full max-w-6xl flex-col pb-4">
         <DashboardSubNav links={links} />
-        <div className="w-full flex-1">{children}</div>
+        <div className="min-h-0 w-full flex-1">{children}</div>
       </section>
     </RequireRole>
   );

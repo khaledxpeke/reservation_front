@@ -113,6 +113,7 @@ function ReservationListItem({ reservation }: { reservation: CustomerReservation
         <p className="truncate text-xs text-zinc-500">
           {formatDate(reservation.date)} · {reservation.startTime} – {reservation.endTime}
         </p>
+        <p className="text-xs font-semibold text-zinc-400">{reservation.reference}</p>
       </div>
       {partner ? (
         <Link

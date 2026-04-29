@@ -8,6 +8,7 @@ import { TUNISIA_GOVERNORATES } from "@/lib/tunisiaGovernorates";
 import {
   Alert,
   Button,
+  DatePicker,
   FormField,
   Input,
   PageHeader,
@@ -129,10 +130,9 @@ export default function MonProfilPage() {
           </Select>
         </FormField>
         <FormField label="Date de naissance">
-          <Input
-            type="date"
+          <DatePicker
             value={dob}
-            onChange={(e) => setDob(e.target.value)}
+            onChange={(next) => setDob(next)}
           />
         </FormField>
 

@@ -5,6 +5,7 @@ import type {
   Gender,
   Paginated,
 } from "@/lib/api/types";
+import type { ReservationStatus } from "@/lib/api/reservations";
 
 export interface UpdateCustomerProfileBody {
   firstName?: string;
@@ -18,6 +19,7 @@ export interface UpdateCustomerProfileBody {
 
 export interface CustomerReservation {
   id: string;
+  reference: string;
   resourceId: string;
   guestName: string;
   guestPhone: string;
@@ -26,7 +28,7 @@ export interface CustomerReservation {
   endDate: string | null;
   startTime: string;
   endTime: string;
-  status: "PENDING" | "CONFIRMED" | "REJECTED" | "CANCELLED";
+  status: ReservationStatus;
   createdAt: string;
   resource?: {
     id: string;
@@ -44,7 +46,7 @@ export interface CustomerReservation {
 export interface ListMyReservationsParams {
   page?: number;
   limit?: number;
-  status?: "PENDING" | "CONFIRMED" | "REJECTED" | "CANCELLED";
+  status?: ReservationStatus;
   scope?: "upcoming" | "past" | "all";
 }
 

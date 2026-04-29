@@ -5,6 +5,7 @@ export { Chip } from "./Chip";
 export { Card, StatCard } from "./Card";
 export { useConfirmDialog } from "./ConfirmDialog";
 export { FormField, Input, Select, Textarea } from "./Input";
+export { DatePicker } from "./DatePicker";
 export { IconButton } from "./IconButton";
 export { Pagination } from "./Pagination";
 export { PageHeader } from "./PageHeader";

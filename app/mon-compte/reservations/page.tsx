@@ -163,6 +163,7 @@ function ReservationRow({
         <p className="mt-1 text-xs font-medium text-zinc-700">
           {formatDate(reservation.date)} · {reservation.startTime} – {reservation.endTime}
         </p>
+        <p className="mt-1 text-xs font-semibold text-zinc-400">{reservation.reference}</p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {partner ? (

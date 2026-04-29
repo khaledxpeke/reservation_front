@@ -104,7 +104,7 @@ function AvatarMenu({ onClose }: { onClose?: () => void }) {
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  if (loading) return <div aria-hidden className="h-8 w-8 rounded-full bg-zinc-100 animate-pulse" />;
+  if (loading) return <div aria-hidden className="h-10 w-10 shrink-0 rounded-full bg-zinc-100 animate-pulse ring-2 ring-white" />;
 
   if (!user) {
     return (
@@ -147,12 +147,12 @@ function AvatarMenu({ onClose }: { onClose?: () => void }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-zinc-200 bg-zinc-100 text-xs font-bold uppercase text-zinc-700 transition hover:border-zinc-400 focus:outline-none"
+        className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-zinc-200/90 bg-zinc-100 text-xs font-bold uppercase text-zinc-700 shadow-sm ring-2 ring-white transition hover:border-zinc-300 hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
         aria-label="Menu utilisateur"
         aria-expanded={open}
       >
         {avatarImg ? (
-          <Image src={avatarImg} alt={initials} fill sizes="36px" className="object-cover" />
+          <Image src={avatarImg} alt="" fill sizes="40px" className="object-cover" />
         ) : (
           initials
         )}

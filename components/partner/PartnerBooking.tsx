@@ -7,7 +7,7 @@ import { getAvailableSlots } from "@/lib/api/slots";
 import type { PublicPartner } from "@/lib/api/marketplace";
 import type { TimeSlot } from "@/lib/api/slots";
 import { ApiError } from "@/lib/api/types";
-import { Alert, Button, Chip, FormField, Input, Select, Spinner } from "@/components/ui";
+import { Alert, Button, Chip, DatePicker, FormField, Input, Select, Spinner } from "@/components/ui";
 
 function todayISO(): string {
   const d = new Date();
@@ -201,27 +201,25 @@ export function PartnerBooking({
           {bookingUnit === "DAYS" ? (
             <div className="grid grid-cols-2 gap-3">
               <FormField label="Date de début">
-                <Input
-                  type="date"
+                <DatePicker
                   value={date}
-                  onChange={(e) => {
-                    setDate(e.target.value);
-                    if (endDate < e.target.value) setEndDate(e.target.value);
+                  onChange={(next) => {
+                    setDate(next);
+                    if (endDate < next) setEndDate(next);
                   }}
                 />
               </FormField>
               <FormField label="Date de fin">
-                <Input
-                  type="date"
+                <DatePicker
                   min={date}
                   value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
+                  onChange={(next) => setEndDate(next)}
                 />
               </FormField>
             </div>
           ) : (
             <FormField label="Date">
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              <DatePicker value={date} onChange={(next) => setDate(next)} />
             </FormField>
           )}
 

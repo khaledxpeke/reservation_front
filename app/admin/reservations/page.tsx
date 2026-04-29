@@ -6,13 +6,16 @@ import {
   updateReservationStatus,
   deleteReservation,
   type AdminReservationRow,
+  type ReservationStatus,
 } from "@/lib/api/reservations";
 import { useMutation } from "@/hooks/useApi";
 import { ApiError, type Paginated } from "@/lib/api/types";
 import {
   Alert,
+  Button,
   CheckIcon,
   DataTable,
+  DatePicker,
   IconButton,
   PageHeader,
   StatusBadge,
@@ -41,7 +44,7 @@ export default function AdminReservationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [statusFilter, setStatusFilter] = useState<"" | "PENDING" | "CONFIRMED" | "REJECTED" | "CANCELLED">("");
+  const [statusFilter, setStatusFilter] = useState<"" | ReservationStatus>("");
   const [dateFilter, setDateFilter] = useState("");
 
   const statusMut = useMutation(updateReservationStatus);
@@ -55,7 +58,7 @@ export default function AdminReservationsPage() {
       const res = await listReservationsAdmin({
         page: p,
         limit: 15,
-        ...(q.status ? { status: q.status as "PENDING" | "CONFIRMED" | "REJECTED" | "CANCELLED" } : {}),
+        ...(q.status ? { status: q.status as ReservationStatus } : {}),
         ...(q.date ? { date: q.date } : {}),
       });
       setData(res);
@@ -69,9 +72,20 @@ export default function AdminReservationsPage() {
 
   useEffect(() => { void load(1, { status: "", date: "" }); }, [load]);
 
-  const act = async (id: string, status: "CONFIRMED" | "REJECTED" | "CANCELLED") => {
+  const act = async (id: string, status: "CONFIRMED" | "REJECTED" | "CANCELLED" | "PAID") => {
     const ok = await statusMut.execute(id, status);
     if (ok !== null) void load(page, { status: statusFilter, date: dateFilter });
+  };
+
+  const cancelPaidReservation = async (id: string) => {
+    const confirmed = await confirmDialog({
+      title: "Annuler une réservation déjà payée ?",
+      description:
+        "Le créneau sera libéré et la facture partenaire associée sera retirée de l'état règlement. Le remboursement du client doit être géré en dehors de l'application.",
+      confirmLabel: "Annuler la réservation",
+    });
+    if (!confirmed) return;
+    await act(id, "CANCELLED");
   };
 
   const remove = async (id: string) => {
@@ -99,12 +113,12 @@ export default function AdminReservationsPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        <input
-          type="date"
+        <DatePicker
           value={dateFilter}
-          onChange={(e) => {
-            setDateFilter(e.target.value);
-            void load(1, { status: statusFilter, date: e.target.value });
+          placeholder="Date"
+          onChange={(next) => {
+            setDateFilter(next);
+            void load(1, { status: statusFilter, date: next });
           }}
           className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 focus:border-zinc-900 focus:outline-none"
         />
@@ -122,6 +136,7 @@ export default function AdminReservationsPage() {
           <option value="CONFIRMED">Confirmée</option>
           <option value="REJECTED">Refusée</option>
           <option value="CANCELLED">Annulée</option>
+          <option value="PAID">Payée</option>
         </select>
         {(statusFilter || dateFilter) && (
           <button
@@ -141,6 +156,7 @@ export default function AdminReservationsPage() {
           <DataTable>
             <TableHead>
               <tr>
+                <TableHeadCell>Référence</TableHeadCell>
                 <TableHeadCell>Date & Heure</TableHeadCell>
                 <TableHeadCell>Partenaire / Ressource</TableHeadCell>
                 <TableHeadCell>Client</TableHeadCell>
@@ -150,10 +166,13 @@ export default function AdminReservationsPage() {
             </TableHead>
             <TableBody>
               {!data?.items.length ? (
-                <TableEmptyRow colSpan={5}>Aucune réservation trouvée.</TableEmptyRow>
+                <TableEmptyRow colSpan={6}>Aucune réservation trouvée.</TableEmptyRow>
               ) : (
                 data.items.map((r) => (
                   <TableRow key={r.id}>
+                    <TableCell>
+                      <p className="font-semibold text-zinc-900">{r.reference}</p>
+                    </TableCell>
                     <TableCell>
                       <p className="font-semibold text-zinc-900">{formatDateFR(r.date)}</p>
                       <p className="text-xs text-zinc-500">{r.startTime} – {r.endTime}</p>
@@ -188,9 +207,28 @@ export default function AdminReservationsPage() {
                           </>
                         )}
                         {r.status === "CONFIRMED" && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="gradient"
+                              onClick={() => void act(r.id, "PAID")}
+                              title="Marquer payée"
+                            >
+                              <CheckIcon /> Marquer payée
+                            </Button>
+                            <IconButton
+                              onClick={() => void act(r.id, "CANCELLED")}
+                              title="Annuler"
+                            >
+                              <XIcon />
+                            </IconButton>
+                          </>
+                        )}
+                        {r.status === "PAID" && (
                           <IconButton
-                            onClick={() => void act(r.id, "CANCELLED")}
-                            title="Annuler"
+                            onClick={() => void cancelPaidReservation(r.id)}
+                            color="warning"
+                            title="Annuler après remboursement (retire la facture)"
                           >
                             <XIcon />
                           </IconButton>

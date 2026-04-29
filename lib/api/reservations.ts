@@ -1,6 +1,8 @@
 import { apiRequest } from "@/lib/api/client";
 import type { Paginated } from "@/lib/api/types";
 
+export type ReservationStatus = "PENDING" | "CONFIRMED" | "REJECTED" | "CANCELLED" | "PAID";
+
 export interface CreateReservationBody {
   resourceId: string;
   guestName: string;
@@ -21,6 +23,7 @@ export function createReservation(body: CreateReservationBody) {
 
 export interface PartnerReservation {
   id: string;
+  reference: string;
   resourceId: string;
   guestName: string;
   guestPhone: string;
@@ -29,14 +32,14 @@ export interface PartnerReservation {
   endDate: string | null;
   startTime: string;
   endTime: string;
-  status: string;
+  status: ReservationStatus;
   resource?: { name: string };
 }
 
 export interface ListPartnerReservationsParams {
   page?: number;
   limit?: number;
-  status?: "PENDING" | "CONFIRMED" | "REJECTED" | "CANCELLED";
+  status?: ReservationStatus;
   date?: string;
   resourceId?: string;
 }
@@ -49,7 +52,7 @@ export function listPartnerReservations(params: ListPartnerReservationsParams) {
 
 export function updateReservationStatus(
   id: string,
-  status: "CONFIRMED" | "REJECTED" | "CANCELLED",
+  status: "CONFIRMED" | "REJECTED" | "CANCELLED" | "PAID",
 ) {
   return apiRequest<PartnerReservation>(`/api/reservations/${id}/status`, {
     method: "PATCH",
@@ -72,7 +75,7 @@ export function deleteReservation(id: string) {
 }
 
 export interface AdminReservationStats {
-  bookings: { total: number; pending: number; confirmed: number; rejected: number };
+  bookings: { total: number; pending: number; confirmed: number; rejected: number; paid: number };
   partners: { total: number; verified: number };
   resources: { total: number };
 }

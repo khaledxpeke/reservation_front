@@ -12,6 +12,8 @@ import { useMutation, formatDateFR } from "@/hooks/useApi";
 import { ApiError, Paginated } from "@/lib/api/types";
 import {
   Alert,
+  Button,
+  DatePicker,
   FormField,
   Input,
   PageHeader,
@@ -19,6 +21,7 @@ import {
   StatusBadge,
   EmptyState,
   TableSkeleton,
+  useConfirmDialog,
 } from "@/components/ui";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -159,6 +162,7 @@ export default function PartnerReservationsPage() {
   const [createLoading, setCreateLoading] = useState(false);
 
   const mutation = useMutation(updateReservationStatus);
+  const { confirm: confirmDialog, dialog } = useConfirmDialog();
 
   const load = useCallback(
     async (p: number) => {
@@ -189,12 +193,23 @@ export default function PartnerReservationsPage() {
     void load(1);
   }, [load]);
 
-  const act = async (id: string, status: "CONFIRMED" | "REJECTED") => {
+  const act = async (id: string, status: "CONFIRMED" | "REJECTED" | "PAID" | "CANCELLED") => {
     const ok = await mutation.execute(id, status);
     if (ok !== null) {
       setSelectedReservation(null);
       void load(page);
     }
+  };
+
+  const cancelConfirmedReservation = async (id: string) => {
+    const ok = await confirmDialog({
+      title: "Annuler cette réservation ?",
+      description:
+        "La réservation est confirmée mais pas encore marquée comme payée. Elle sera annulée et le créneau sera libéré. À utiliser si le client renonce ou demande l'annulation.",
+      confirmLabel: "Annuler la réservation",
+    });
+    if (!ok) return;
+    await act(id, "CANCELLED");
   };
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
@@ -226,6 +241,7 @@ export default function PartnerReservationsPage() {
 
   return (
     <div>
+      {dialog}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <PageHeader title="Réservations" description="Gérez les demandes de réservation de vos clients." />
@@ -292,11 +308,9 @@ export default function PartnerReservationsPage() {
             </FormField>
           </div>
           <FormField label="Date *">
-            <Input
-              type="date"
-              required
+            <DatePicker
               value={createForm.date}
-              onChange={(e) => setCreateForm((p) => ({ ...p, date: e.target.value }))}
+              onChange={(next) => setCreateForm((p) => ({ ...p, date: next }))}
             />
           </FormField>
           <div className="grid grid-cols-2 gap-3">
@@ -325,6 +339,7 @@ export default function PartnerReservationsPage() {
         <ModalShell title="Détails de la réservation" onClose={() => setSelectedReservation(null)}>
           <dl className="space-y-3 text-sm">
             {[
+              ["Référence", selectedReservation.reference],
               ["Ressource", selectedReservation.resource?.name ?? "—"],
               [
                 "Date & Heure",
@@ -364,6 +379,30 @@ export default function PartnerReservationsPage() {
                   <CheckIcon /> Confirmer
                 </button>
               </>
+            ) : selectedReservation.status === "CONFIRMED" ? (
+              <div className="w-full space-y-4">
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                  <p className="text-sm font-semibold text-emerald-950">Le client a payé cette réservation ?</p>
+                  <p className="mt-1 text-xs text-emerald-800">
+                    Cliquez ici seulement après avoir reçu le paiement du client.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="gradient"
+                    className="mt-3 w-full"
+                    onClick={() => void act(selectedReservation.id, "PAID")}
+                  >
+                    <CheckIcon /> Oui, marquer comme payée
+                  </Button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void cancelConfirmedReservation(selectedReservation.id)}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
+                >
+                  <XIcon /> Annuler la réservation
+                </button>
+              </div>
             ) : (
               <button
                 type="button"
@@ -391,6 +430,7 @@ export default function PartnerReservationsPage() {
           <table className="w-full text-left text-sm">
             <thead className="border-b border-zinc-200 bg-zinc-50">
               <tr>
+                <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Référence</th>
                 <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Date</th>
                 <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Créneau</th>
                 <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Invité</th>
@@ -404,7 +444,10 @@ export default function PartnerReservationsPage() {
             <tbody className="divide-y divide-zinc-100">
               {data.items.map((r) => (
                 <tr key={r.id} className="transition-colors hover:bg-zinc-50">
-                  <td className="px-5 py-3 font-medium text-zinc-900">{formatDateFR(r.date)}</td>
+                  <td className="px-5 py-3 font-semibold text-zinc-900">{r.reference}</td>
+                  <td className="px-5 py-3">
+                    <p className="font-medium text-zinc-900">{formatDateFR(r.date)}</p>
+                  </td>
                   <td className="px-5 py-3 tabular-nums text-zinc-600">
                     {r.startTime} – {r.endTime}
                   </td>
@@ -433,6 +476,25 @@ export default function PartnerReservationsPage() {
                           <IconBtn
                             onClick={() => void act(r.id, "REJECTED")}
                             title="Refuser"
+                            color="danger"
+                          >
+                            <XIcon />
+                          </IconBtn>
+                        </>
+                      )}
+                      {r.status === "CONFIRMED" && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => void act(r.id, "PAID")}
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700"
+                          >
+                            <CheckIcon />
+                            Marquer comme payée
+                          </button>
+                          <IconBtn
+                            onClick={() => void cancelConfirmedReservation(r.id)}
+                            title="Annuler la réservation"
                             color="danger"
                           >
                             <XIcon />

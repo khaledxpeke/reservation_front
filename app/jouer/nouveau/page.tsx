@@ -17,6 +17,7 @@ import { TUNISIA_GOVERNORATES } from "@/lib/tunisiaGovernorates";
 import {
   Alert,
   Button,
+  DatePicker,
   FormField,
   Input,
   PageHeader,
@@ -104,12 +105,10 @@ function NouvelleAnnonceForm() {
         className="grid gap-4 rounded-xl border border-zinc-100 bg-white p-6 shadow-sm sm:grid-cols-2"
       >
         <FormField label="Date">
-          <Input
-            type="date"
-            required
+          <DatePicker
             min={today}
             value={date}
-            onChange={(e) => setDate(e.target.value)}
+            onChange={(next) => setDate(next)}
           />
         </FormField>
         <FormField label="Joueurs recherchés">

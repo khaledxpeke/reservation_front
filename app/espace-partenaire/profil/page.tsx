@@ -1,28 +1,47 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { setStoredUser } from "@/lib/api/client";
 import { getApiErrorHint, getApiErrorMessage } from "@/lib/api/errors";
 import { getPartner, updatePartner, type PartnerProfile } from "@/lib/api/partners";
-import { Alert, Button, Card, FormField, Input, PageHeader } from "@/components/ui";
+import { Alert, FormField, Input } from "@/components/ui";
 import { PageSpinner } from "@/components/ui/Spinner";
 import { CloudinaryUploadButton } from "@/components/cloudinary/CloudinaryUploadButton";
 import { isCloudinaryConfigured } from "@/components/cloudinary/cloudinaryUtils";
 import { partnerHeroUrl, partnerLogoUrl } from "@/lib/imageUrls";
 import { IMAGE_URL_MAX_LENGTH } from "@/lib/validation";
 
+const AUTOSAVE_MS = 650;
+
+function serializeFields(fields: {
+  name: string;
+  city: string;
+  phone: string;
+  address: string;
+  logo: string | null;
+  coverImage: string | null;
+}) {
+  return JSON.stringify({
+    name: fields.name,
+    city: fields.city,
+    phone: fields.phone,
+    address: fields.address.trim() || undefined,
+    logo: fields.logo,
+    coverImage: fields.coverImage,
+  });
+}
+
 export default function PartnerProfilPage() {
   const { user, setUser } = useAuth();
   const partnerId = user?.partner?.id;
 
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorHint, setErrorHint] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const [profile, setProfile] = useState<PartnerProfile | null>(null);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
 
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
@@ -30,6 +49,9 @@ export default function PartnerProfilPage() {
   const [address, setAddress] = useState("");
   const [logo, setLogo] = useState<string | null>(null);
   const [coverImage, setCoverImage] = useState<string | null>(null);
+
+  const lastPersistedRef = useRef<string | null>(null);
+  const savedClearRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(async () => {
     if (!partnerId) return;
@@ -45,6 +67,14 @@ export default function PartnerProfilPage() {
       setAddress(p.address ?? "");
       setLogo(p.logo);
       setCoverImage(p.coverImage);
+      lastPersistedRef.current = serializeFields({
+        name: p.name,
+        city: p.city,
+        phone: p.phone,
+        address: p.address ?? "",
+        logo: p.logo,
+        coverImage: p.coverImage,
+      });
     } catch (e) {
       setError(getApiErrorMessage(e, "Chargement impossible."));
       setErrorHint(getApiErrorHint(e));
@@ -57,51 +87,88 @@ export default function PartnerProfilPage() {
     void load();
   }, [load]);
 
-  const onSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!partnerId) return;
-    setSaving(true);
-    setError(null);
-    setErrorHint(null);
-    try {
-      const updated = await updatePartner(partnerId, {
-        name,
-        city,
-        phone,
-        address: address.trim() || undefined,
-        logo,
-        coverImage,
-      });
-      setProfile(updated);
-      if (user?.partner) {
-        const next = {
-          ...user,
-          partner: {
-            ...user.partner,
+  const pushAuthPartner = useCallback(
+    (updated: PartnerProfile) => {
+      if (!user?.partner) return;
+      const next = {
+        ...user,
+        partner: {
+          ...user.partner,
+          name: updated.name,
+          city: updated.city,
+          phone: updated.phone,
+          address: updated.address,
+          logo: updated.logo,
+          coverImage: updated.coverImage,
+        },
+      };
+      setUser(next);
+      setStoredUser(JSON.stringify(next));
+    },
+    [setUser, user],
+  );
+
+  useEffect(() => {
+    if (!partnerId || loading || !profile || lastPersistedRef.current === null) return;
+
+    const key = serializeFields({ name, city, phone, address, logo, coverImage });
+    if (key === lastPersistedRef.current) return;
+
+    setSaveState("saving");
+    const t = window.setTimeout(() => {
+      void (async () => {
+        const payload = { name, city, phone, address, logo, coverImage };
+        const nextKey = serializeFields(payload);
+        if (nextKey === lastPersistedRef.current) {
+          setSaveState("idle");
+          return;
+        }
+
+        setError(null);
+        setErrorHint(null);
+        try {
+          const updated = await updatePartner(partnerId, {
+            name: payload.name,
+            city: payload.city,
+            phone: payload.phone,
+            address: payload.address.trim() || undefined,
+            logo: payload.logo,
+            coverImage: payload.coverImage,
+          });
+          setProfile(updated);
+          lastPersistedRef.current = serializeFields({
             name: updated.name,
             city: updated.city,
             phone: updated.phone,
-            address: updated.address,
+            address: updated.address ?? "",
             logo: updated.logo,
             coverImage: updated.coverImage,
-          },
-        };
-        setUser(next);
-        setStoredUser(JSON.stringify(next));
-      }
-      setSuccess(true);
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Enregistrement impossible."));
-      setErrorHint(getApiErrorHint(err));
-    } finally {
-      setSaving(false);
-    }
-  };
+          });
+          pushAuthPartner(updated);
+          setSaveState("saved");
+          if (savedClearRef.current) clearTimeout(savedClearRef.current);
+          savedClearRef.current = setTimeout(() => setSaveState("idle"), 2200);
+        } catch (err) {
+          setSaveState("idle");
+          setError(getApiErrorMessage(err, "Enregistrement impossible."));
+          setErrorHint(getApiErrorHint(err));
+        }
+      })();
+    }, AUTOSAVE_MS);
+
+    return () => window.clearTimeout(t);
+  }, [partnerId, loading, profile, name, city, phone, address, logo, coverImage, pushAuthPartner]);
+
+  useEffect(() => {
+    return () => {
+      if (savedClearRef.current) clearTimeout(savedClearRef.current);
+    };
+  }, []);
 
   if (!partnerId) {
     return (
-      <div>
-        <PageHeader title="Profil" />
+      <div className="space-y-3">
+        <h1 className="text-lg font-medium text-zinc-900">Profil</h1>
         <Alert hint="Reconnectez-vous puis réessayez.">Session invalide.</Alert>
       </div>
     );
@@ -109,11 +176,11 @@ export default function PartnerProfilPage() {
 
   if (loading || !profile) {
     return (
-      <div className="space-y-6">
-        <PageHeader title="Profil club" description="Logo, bannière et coordonnées affichés sur la place de marché." />
-        <Card className="flex min-h-64 items-center justify-center">
+      <div className="flex min-h-[40vh] flex-col gap-6">
+        <h1 className="text-lg font-medium text-zinc-900">Profil</h1>
+        <div className="flex flex-1 items-center justify-center py-20">
           <PageSpinner />
-        </Card>
+        </div>
       </div>
     );
   }
@@ -124,140 +191,143 @@ export default function PartnerProfilPage() {
     coverImage,
   };
 
+  const saveHint =
+    saveState === "saving"
+      ? "Enregistrement…"
+      : saveState === "saved"
+        ? "Enregistré"
+        : null;
+
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Profil club"
-        description="Les images sont hébergées sur Cloudinary (recommandé) : uploadez, puis l’URL est enregistrée ici. Sinon collez une URL https."
-      />
+    <div className="mx-auto max-w-4xl space-y-8 pb-8">
+      <header className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+        <h1 className="text-lg font-medium tracking-tight text-zinc-900">Profil club</h1>
+        {saveHint && (
+          <span
+            className={`text-xs ${saveState === "saving" ? "text-zinc-400" : "text-zinc-500"}`}
+            aria-live="polite"
+          >
+            {saveHint}
+          </span>
+        )}
+      </header>
+
+      {error && (
+        <p className="text-sm text-rose-600" role="alert">
+          {error}
+          {errorHint ? <span className="mt-1 block text-xs text-rose-500">{errorHint}</span> : null}
+        </p>
+      )}
 
       {!isCloudinaryConfigured() && (
-        <div>
-          <Alert variant="info">
-            Pour uploader depuis l’interface : créez un compte{" "}
-            <a href="https://cloudinary.com/users/register_free" className="underline" target="_blank" rel="noreferrer">
-              Cloudinary (gratuit)
+        <details className="text-xs text-zinc-500">
+          <summary className="cursor-pointer text-zinc-600 underline decoration-zinc-300 underline-offset-2 hover:text-zinc-900">
+            Upload via Cloudinary (optionnel)
+          </summary>
+          <p className="mt-2 max-w-lg leading-relaxed">
+            Compte{" "}
+            <a href="https://cloudinary.com/users/register_free" className="text-zinc-800 underline" target="_blank" rel="noreferrer">
+              Cloudinary
             </a>
-            , ajoutez un preset de téléchargement <strong>unsigned</strong>, puis définissez{" "}
-            <code className="rounded bg-zinc-100 px-1">NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME</code> et{" "}
-            <code className="rounded bg-zinc-100 px-1">NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET</code> dans{" "}
-            <code className="rounded bg-zinc-100 px-1">.env.local</code>. Vous pouvez toujours coller une URL d’image
-            manuellement.
-          </Alert>
-        </div>
+            , preset unsigned, variables{" "}
+            <code className="rounded bg-zinc-100 px-1 py-0.5 text-[10px] text-zinc-700">NEXT_PUBLIC_CLOUDINARY_*</code> — ou
+            collez une URL https.
+          </p>
+        </details>
       )}
 
-      {success && (
-        <div>
-          <Alert variant="success">Modifications enregistrées avec succès.</Alert>
+      {/* Aperçu — léger, sans carte lourde */}
+      <div className="flex h-[4.75rem] overflow-hidden rounded-xl bg-zinc-100/80 ring-1 ring-zinc-200/60">
+        <div className="relative h-full w-36 shrink-0 sm:w-40">
+          <Image src={partnerHeroUrl(preview)} alt="" fill className="object-cover" sizes="160px" priority />
         </div>
-      )}
-      {error && (
-        <div>
-          <Alert hint={errorHint}>{error}</Alert>
-        </div>
-      )}
-
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <Card className="overflow-hidden p-0">
-          <div className="relative h-40 bg-zinc-100">
+        <div className="flex min-w-0 flex-1 items-center gap-3 px-4">
+          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full ring-2 ring-white">
             <Image
-              src={partnerHeroUrl(preview)}
-              alt="Aperçu bannière"
-              fill
-              className="object-cover"
-              sizes="(max-width: 1024px) 100vw, 50vw"
+              src={partnerLogoUrl({ id: profile.id, logo })}
+              alt=""
+              width={44}
+              height={44}
+              className="h-full w-full object-cover"
             />
-            <div className="absolute bottom-2 left-2 h-14 w-14 overflow-hidden rounded-full border-2 border-white bg-white shadow">
-              <Image
-                src={partnerLogoUrl({ id: profile.id, logo })}
-                alt="Aperçu logo"
-                width={56}
-                height={56}
-                className="h-full w-full object-cover"
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-zinc-900">{name || "Club"}</p>
+            <p className="truncate text-xs text-zinc-500">{[city, phone].filter(Boolean).join(" · ") || "—"}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-10 sm:grid-cols-2 sm:gap-12">
+        <div className="space-y-5">
+          <FormField label="Logo">
+            <div className="flex gap-2">
+              <Input
+                size="sm"
+                type="url"
+                placeholder="https://…"
+                maxLength={IMAGE_URL_MAX_LENGTH}
+                value={logo ?? ""}
+                onChange={(e) => setLogo(e.target.value || null)}
+                className="min-w-0 flex-1 border-zinc-200/90 bg-white"
               />
+              <CloudinaryUploadButton label="" onUploaded={(url) => setLogo(url)} />
             </div>
-          </div>
-          <div className="space-y-1 p-4">
-            <p className="text-sm font-semibold text-zinc-900">{name}</p>
-            <p className="text-xs text-zinc-500">Aperçu public sur la place de marché et la fiche club.</p>
-          </div>
-        </Card>
-
-        <form onSubmit={(e) => void onSave(e)} className="space-y-5">
-          <Card className="space-y-4">
-            <div>
-              <h2 className="text-sm font-semibold text-zinc-900">Images du club</h2>
-              <p className="mt-1 text-xs text-zinc-500">
-                Utilisez des URL HTTPS courtes. Limite: {IMAGE_URL_MAX_LENGTH} caractères.
-              </p>
+          </FormField>
+          <FormField label="Bannière">
+            <div className="flex gap-2">
+              <Input
+                size="sm"
+                type="url"
+                placeholder="https://…"
+                maxLength={IMAGE_URL_MAX_LENGTH}
+                value={coverImage ?? ""}
+                onChange={(e) => setCoverImage(e.target.value || null)}
+                className="min-w-0 flex-1 border-zinc-200/90 bg-white"
+              />
+              <CloudinaryUploadButton label="" onUploaded={(url) => setCoverImage(url)} />
             </div>
+          </FormField>
+          <p className="text-[11px] text-zinc-400">URL https, max. {IMAGE_URL_MAX_LENGTH} caractères</p>
+        </div>
 
-            <FormField label="Logo (URL https)">
-              <div className="flex flex-wrap gap-2">
-                <Input
-                  type="url"
-                  placeholder="https://res.cloudinary.com/…"
-                  maxLength={IMAGE_URL_MAX_LENGTH}
-                  value={logo ?? ""}
-                  onChange={(e) => setLogo(e.target.value || null)}
-                  className="min-w-0 flex-1"
-                />
-                <CloudinaryUploadButton
-                  label="Uploader"
-                  onUploaded={(url) => setLogo(url)}
-                />
-              </div>
-            </FormField>
-
-            <FormField label="Bannière (URL https)">
-              <div className="flex flex-wrap gap-2">
-                <Input
-                  type="url"
-                  placeholder="https://res.cloudinary.com/…"
-                  maxLength={IMAGE_URL_MAX_LENGTH}
-                  value={coverImage ?? ""}
-                  onChange={(e) => setCoverImage(e.target.value || null)}
-                  className="min-w-0 flex-1"
-                />
-                <CloudinaryUploadButton
-                  label="Uploader"
-                  onUploaded={(url) => setCoverImage(url)}
-                />
-              </div>
-            </FormField>
-          </Card>
-
-          <Card className="space-y-4">
-            <div>
-              <h2 className="text-sm font-semibold text-zinc-900">Coordonnées</h2>
-              <p className="mt-1 text-xs text-zinc-500">
-                Ces informations aident les joueurs à identifier et contacter votre club.
-              </p>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <FormField label="Nom du club">
-                <Input required value={name} onChange={(e) => setName(e.target.value)} />
-              </FormField>
-              <FormField label="Ville">
-                <Input required value={city} onChange={(e) => setCity(e.target.value)} />
-              </FormField>
-              <FormField label="Téléphone">
-                <Input required value={phone} onChange={(e) => setPhone(e.target.value)} />
-              </FormField>
-              <FormField label="Adresse">
-                <Input value={address} onChange={(e) => setAddress(e.target.value)} />
-              </FormField>
-            </div>
-
-            <div className="flex justify-end">
-              <Button type="submit" loading={saving}>
-                Enregistrer
-              </Button>
-            </div>
-          </Card>
-        </form>
+        <div className="space-y-5 sm:border-l sm:border-zinc-100 sm:pl-12">
+          <FormField label="Nom du club">
+            <Input
+              size="sm"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="border-zinc-200/90 bg-white"
+            />
+          </FormField>
+          <FormField label="Ville">
+            <Input
+              size="sm"
+              required
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              className="border-zinc-200/90 bg-white"
+            />
+          </FormField>
+          <FormField label="Téléphone">
+            <Input
+              size="sm"
+              required
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="border-zinc-200/90 bg-white"
+            />
+          </FormField>
+          <FormField label="Adresse">
+            <Input
+              size="sm"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className="border-zinc-200/90 bg-white"
+            />
+          </FormField>
+        </div>
       </div>
     </div>
   );

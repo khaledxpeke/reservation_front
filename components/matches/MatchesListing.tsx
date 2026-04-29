@@ -17,9 +17,9 @@ import {
 import { TUNISIA_GOVERNORATES } from "@/lib/tunisiaGovernorates";
 import {
   Button,
+  DatePicker,
   EmptyState,
   FormField,
-  Input,
   PageHeader,
   Select,
   Spinner,
@@ -94,10 +94,9 @@ export function MatchesListing() {
 
       <div className="grid grid-cols-1 gap-3 rounded-xl border border-zinc-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-5">
         <FormField label="Date">
-          <Input
-            type="date"
+          <DatePicker
             value={date}
-            onChange={(e) => setDate(e.target.value)}
+            onChange={(next) => setDate(next)}
             size="sm"
           />
         </FormField>

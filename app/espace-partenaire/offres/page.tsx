@@ -12,7 +12,7 @@ import {
   ALL_DAYS,
 } from "@/lib/api/offers";
 import { useApi, useMutation } from "@/hooks/useApi";
-import { Alert, FormField, Input, Textarea, PageHeader, Select, StatusBadge } from "@/components/ui";
+import { Alert, DatePicker, FormField, Input, Textarea, PageHeader, Select, StatusBadge } from "@/components/ui";
 import { PageSpinner } from "@/components/ui/Spinner";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -210,24 +210,20 @@ export default function PartnerOffersPage() {
 
               {/* Start date — always required for all offer types */}
               <FormField label="Date de début *">
-                <Input
-                  type="date"
-                  required
+                <DatePicker
                   min={new Date().toISOString().split("T")[0]}
                   value={validFrom}
-                  onChange={(e) => setValidFrom(e.target.value)}
+                  onChange={(next) => setValidFrom(next)}
                 />
               </FormField>
 
               {/* One-shot: end date required */}
               {recurrence === "NONE" && (
                 <FormField label="Date de fin *">
-                  <Input
-                    type="date"
-                    required
+                  <DatePicker
                     min={validFrom || new Date().toISOString().split("T")[0]}
                     value={validUntil}
-                    onChange={(e) => setValidUntil(e.target.value)}
+                    onChange={(next) => setValidUntil(next)}
                   />
                 </FormField>
               )}
@@ -269,11 +265,10 @@ export default function PartnerOffersPage() {
               {/* End date for recurring (optional — when the recurring pattern expires) */}
               {recurrence !== "NONE" && (
                 <FormField label="Date de fin (optionnelle)">
-                  <Input
-                    type="date"
+                  <DatePicker
                     min={validFrom || new Date().toISOString().split("T")[0]}
                     value={validUntil}
-                    onChange={(e) => setValidUntil(e.target.value)}
+                    onChange={(next) => setValidUntil(next)}
                   />
                 </FormField>
               )}

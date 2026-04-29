@@ -67,7 +67,39 @@ const emptyCreate = () => ({
   coverImage: "",
   packId: "",
   isVerified: false,
+  commissionPercent: 0,
 });
+
+function asNumber(value: string | number | null | undefined) {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function ModalShell({ title, onClose, onSubmit, children, submitLabel, loading: busy }: {
+  title: string; onClose: () => void; onSubmit?: (e: React.FormEvent) => void;
+  children: React.ReactNode; submitLabel?: string; loading?: boolean;
+}) {
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+      <form
+        onSubmit={onSubmit ?? ((e) => e.preventDefault())}
+        className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
+      >
+        <button type="button" onClick={onClose} className="absolute right-4 top-4 rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 transition">
+          <XIcon className="h-5 w-5" strokeWidth={2} />
+        </button>
+        <h3 className="mb-4 pr-8 text-lg font-semibold text-zinc-900">{title}</h3>
+        <div className="space-y-3">{children}</div>
+        {onSubmit && (
+          <div className="mt-6 flex justify-end gap-2">
+            <Button variant="ghost" type="button" onClick={onClose}>Annuler</Button>
+            <Button type="submit" loading={busy}>{submitLabel ?? "Enregistrer"}</Button>
+          </div>
+        )}
+      </form>
+    </div>
+  );
+}
 
 export default function AdminPartnersPage() {
   const [page, setPage] = useState(1);
@@ -79,7 +111,7 @@ export default function AdminPartnersPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState(emptyCreate());
   const [editPartner, setEditPartner] = useState<PartnerListItem | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", city: "", phone: "", address: "", categoryId: "", logo: "", coverImage: "" });
+  const [editForm, setEditForm] = useState({ name: "", city: "", phone: "", address: "", categoryId: "", logo: "", coverImage: "", commissionPercent: 0 });
 
   const [search, setSearch] = useState("");
   const [verifiedFilter, setVerifiedFilter] = useState("");
@@ -136,7 +168,7 @@ export default function AdminPartnersPage() {
 
   const openEdit = (p: PartnerListItem) => {
     setEditPartner(p);
-    setEditForm({ name: p.name, city: p.city, phone: p.phone, address: p.address ?? "", categoryId: p.category?.id ?? "", logo: p.logo ?? "", coverImage: p.coverImage ?? "" });
+    setEditForm({ name: p.name, city: p.city, phone: p.phone, address: p.address ?? "", categoryId: p.category?.id ?? "", logo: p.logo ?? "", coverImage: p.coverImage ?? "", commissionPercent: asNumber(p.commissionPercent) });
   };
 
   const onCreateSubmit = async (e: React.FormEvent) => {
@@ -147,6 +179,7 @@ export default function AdminPartnersPage() {
       email: createForm.email.trim(), password: createForm.password,
       name: createForm.name.trim(), city: createForm.city.trim(), phone: createForm.phone.trim(),
       categoryId: createForm.categoryId, isVerified: createForm.isVerified,
+      commissionPercent: createForm.commissionPercent,
       ...(createForm.address?.trim() ? { address: createForm.address.trim() } : {}),
       ...(createForm.packId ? { packId: createForm.packId } : { packId: null }),
       ...(createForm.logo?.trim() ? { logo: createForm.logo.trim() } : {}),
@@ -169,6 +202,7 @@ export default function AdminPartnersPage() {
     const body: UpdatePartnerBody = {
       name: editForm.name.trim(), city: editForm.city.trim(), phone: editForm.phone.trim(),
       categoryId: editForm.categoryId,
+      commissionPercent: editForm.commissionPercent,
       ...(editForm.address.trim() ? { address: editForm.address.trim() } : { address: "" }),
       ...(editForm.logo.trim() ? { logo: editForm.logo.trim() } : { logo: null }),
       ...(editForm.coverImage.trim() ? { coverImage: editForm.coverImage.trim() } : { coverImage: null }),
@@ -211,30 +245,6 @@ export default function AdminPartnersPage() {
 
   const mutError = error || verifyMut.error || packMut.error || createMut.error || deleteMut.error || updateMut.error;
   const categoryOptions = data?.categories ?? [];
-
-  const ModalShell = ({ title, onClose, onSubmit, children, submitLabel, loading: busy }: {
-    title: string; onClose: () => void; onSubmit?: (e: React.FormEvent) => void;
-    children: React.ReactNode; submitLabel?: string; loading?: boolean;
-  }) => (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-      <form
-        onSubmit={onSubmit ?? ((e) => e.preventDefault())}
-        className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
-      >
-        <button type="button" onClick={onClose} className="absolute right-4 top-4 rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 transition">
-          <XIcon className="h-5 w-5" strokeWidth={2} />
-        </button>
-        <h3 className="mb-4 pr-8 text-lg font-semibold text-zinc-900">{title}</h3>
-        <div className="space-y-3">{children}</div>
-        {onSubmit && (
-          <div className="mt-6 flex justify-end gap-2">
-            <Button variant="ghost" type="button" onClick={onClose}>Annuler</Button>
-            <Button type="submit" loading={busy}>{submitLabel ?? "Enregistrer"}</Button>
-          </div>
-        )}
-      </form>
-    </div>
-  );
 
   return (
     <div className="space-y-6">
@@ -297,6 +307,7 @@ export default function AdminPartnersPage() {
               ["Téléphone", selectedPartner.phone || "—"],
               ["Adresse", selectedPartner.address || "—"],
               ["Catégorie", selectedPartner.category?.name ?? "—"],
+              ["Marge", `${asNumber(selectedPartner.commissionPercent).toFixed(2)} %`],
             ].map(([label, value]) => (
               <div key={label}>
                 <dt className="text-xs font-semibold uppercase tracking-wider text-zinc-400">{label}</dt>
@@ -338,6 +349,16 @@ export default function AdminPartnersPage() {
               <option value="">Aucun</option>
               {data?.packs.map((pk) => <option key={pk.id} value={pk.id}>{pk.name}</option>)}
             </Select>
+          </FormField>
+          <FormField label="Marge (%)">
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              step={0.01}
+              value={createForm.commissionPercent}
+              onChange={(e) => setCreateForm((s) => ({ ...s, commissionPercent: Number(e.target.value) }))}
+            />
           </FormField>
           <label className="flex items-center gap-2 text-sm text-zinc-800 cursor-pointer">
             <input type="checkbox" checked={createForm.isVerified} onChange={(e) => setCreateForm((s) => ({ ...s, isVerified: e.target.checked }))} className="rounded border-zinc-300" />
@@ -400,6 +421,16 @@ export default function AdminPartnersPage() {
               {categoryOptions.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </Select>
           </FormField>
+          <FormField label="Marge (%)">
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              step={0.01}
+              value={editForm.commissionPercent}
+              onChange={(e) => setEditForm((s) => ({ ...s, commissionPercent: Number(e.target.value) }))}
+            />
+          </FormField>
           <FormField label="Logo (URL)">
             <div className="flex items-center gap-2">
               {editForm.logo && (
@@ -452,6 +483,7 @@ export default function AdminPartnersPage() {
                 <TableHeadCell>Nom</TableHeadCell>
                 <TableHeadCell>Ville</TableHeadCell>
                 <TableHeadCell>Catégorie</TableHeadCell>
+                <TableHeadCell>Marge</TableHeadCell>
                 <TableHeadCell>Vérifié</TableHeadCell>
                 <TableHeadCell>Pack</TableHeadCell>
                 <TableHeadCell align="right">Actions</TableHeadCell>
@@ -459,7 +491,7 @@ export default function AdminPartnersPage() {
             </TableHead>
             <TableBody>
               {!data?.partners.items.length ? (
-                <TableEmptyRow colSpan={7}>Aucun partenaire trouvé.</TableEmptyRow>
+                <TableEmptyRow colSpan={8}>Aucun partenaire trouvé.</TableEmptyRow>
               ) : (
                 data.partners.items.map((p) => (
                   <TableRow key={p.id}>
@@ -474,6 +506,7 @@ export default function AdminPartnersPage() {
                     </TableCell>
                     <TableCell className="text-zinc-600">{p.city}</TableCell>
                     <TableCell className="text-xs text-zinc-600">{p.category?.name ?? "—"}</TableCell>
+                    <TableCell className="text-xs font-medium text-zinc-700">{asNumber(p.commissionPercent).toFixed(2)} %</TableCell>
                     <TableCell>
                       <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${p.isVerified ? "bg-emerald-100 text-emerald-700" : "bg-zinc-100 text-zinc-500"}`}>
                         {p.isVerified ? "Vérifié" : "Non vérifié"}

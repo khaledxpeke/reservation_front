@@ -10,6 +10,7 @@ export interface PartnerListItem {
   phone: string;
   address: string | null;
   isVerified: boolean;
+  commissionPercent: string;
   category?: { id: string; name: string; slug: string };
   user?: { email: string; status: string };
   pack?: { id: string; name: string; maxResources: number } | null;
@@ -42,6 +43,7 @@ export interface CreatePartnerBody {
   coverImage?: string | null;
   packId?: string | null;
   isVerified?: boolean;
+  commissionPercent?: number;
 }
 
 export function createPartner(body: CreatePartnerBody) {
@@ -62,6 +64,7 @@ export interface PartnerProfile {
   phone: string;
   address: string | null;
   isVerified: boolean;
+  commissionPercent: string;
   category: { id: string; name: string; slug: string };
   pack: { id: string; name: string; maxResources: number } | null;
   user: { id: string; email: string; status: string };
@@ -80,6 +83,7 @@ export interface UpdatePartnerBody {
   phone?: string;
   address?: string;
   categoryId?: string;
+  commissionPercent?: number;
 }
 
 export function updatePartner(id: string, body: UpdatePartnerBody) {

@@ -9,6 +9,7 @@ const adminLinks: DashboardNavLink[] = [
   { href: "/admin/utilisateurs", label: "Utilisateurs" },
   { href: "/admin/partenaires", label: "Partenaires" },
   { href: "/admin/reservations", label: "Réservations" },
+  { href: "/admin/etat-reglement", label: "Etat règlement" },
   { href: "/admin/offres", label: "Offres" },
   { href: "/admin/categories", label: "Catégories" },
   { href: "/admin/packs", label: "Packs" },

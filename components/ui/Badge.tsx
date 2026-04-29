@@ -28,6 +28,7 @@ const statusMap: Record<string, { label: string; variant: BadgeVariant }> = {
   CONFIRMED: { label: "Confirmée", variant: "success" },
   REJECTED: { label: "Refusée", variant: "danger" },
   CANCELLED: { label: "Annulée", variant: "default" },
+  PAID: { label: "Payée", variant: "info" },
   APPROVED: { label: "Approuvée", variant: "success" },
   ACTIVE: { label: "Actif", variant: "success" },
   BLOCKED: { label: "Bloqué", variant: "danger" },

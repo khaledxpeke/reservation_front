@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError } from "@/lib/api/types";
 import { TUNISIA_GOVERNORATES } from "@/lib/tunisiaGovernorates";
-import { Alert, Button, FormField, Input, Select } from "@/components/ui";
+import { Alert, Button, DatePicker, FormField, Input, Select } from "@/components/ui";
 import type { Gender } from "@/lib/api/types";
 
 export default function InscriptionClientPage() {
@@ -23,6 +23,11 @@ export default function InscriptionClientPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const maxDob = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }, []);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,12 +90,7 @@ export default function InscriptionClientPage() {
             </Select>
           </FormField>
           <FormField label="Date de naissance">
-            <Input
-              type="date"
-              required
-              value={dob}
-              onChange={(e) => setDob(e.target.value)}
-            />
+            <DatePicker value={dob} onChange={(next) => setDob(next)} max={maxDob} />
           </FormField>
 
           <FormField label="E-mail" className="sm:col-span-2">
