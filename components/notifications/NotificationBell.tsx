@@ -156,7 +156,7 @@ export function NotificationBell() {
               <button
                 type="button"
                 onClick={onMarkAllRead}
-                className="text-xs font-medium text-emerald-600 hover:underline"
+                className="text-xs font-medium text-teal-600 hover:underline"
               >
                 Tout marquer lu
               </button>
@@ -181,7 +181,7 @@ export function NotificationBell() {
                         href={n.url}
                         onClick={() => onClickNotif(n)}
                         className={`block px-4 py-3 transition-colors hover:bg-zinc-50 ${
-                          !n.readAt ? "bg-emerald-50/50" : ""
+                          !n.readAt ? "bg-teal-50/50" : ""
                         }`}
                       >
                         <NotifContent notif={n} />
@@ -195,7 +195,7 @@ export function NotificationBell() {
                           if (e.key === "Enter") onClickNotif(n);
                         }}
                         className={`cursor-pointer px-4 py-3 transition-colors hover:bg-zinc-50 ${
-                          !n.readAt ? "bg-emerald-50/50" : ""
+                          !n.readAt ? "bg-teal-50/50" : ""
                         }`}
                       >
                         <NotifContent notif={n} />
@@ -216,7 +216,7 @@ function NotifContent({ notif }: { notif: NotifType }) {
   return (
     <div className="flex items-start gap-2.5">
       {!notif.readAt && (
-        <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+        <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-teal-500" />
       )}
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-zinc-900">{notif.title}</p>

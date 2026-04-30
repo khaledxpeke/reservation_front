@@ -6,7 +6,7 @@ type IconButtonSize = "sm" | "md";
 const colors: Record<IconButtonColor, string> = {
   default: "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900",
   danger: "text-rose-500 hover:bg-rose-50 hover:text-rose-700",
-  success: "text-emerald-600 hover:bg-emerald-50 hover:text-emerald-800",
+  success: "text-teal-600 hover:bg-teal-50 hover:text-teal-800",
   warning: "text-amber-600 hover:bg-amber-50 hover:text-amber-800",
 };
 

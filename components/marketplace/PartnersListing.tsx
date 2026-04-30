@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { searchPartners, type MarketplacePartnerItem } from "@/lib/api/marketplace";
 import { listCategories, type Category } from "@/lib/api/categories";
@@ -10,13 +11,23 @@ import { partnerHeroUrl, partnerLogoUrl } from "@/lib/imageUrls";
 import { TUNISIA_GOVERNORATES } from "@/lib/tunisiaGovernorates";
 import { Alert, Button, FormField, Input, PageHeader, Select } from "@/components/ui";
 
-export function PartnersListing() {
+export function PartnersListing({ variant = "page" }: { variant?: "page" | "embedded" }) {
+  const searchParams = useSearchParams();
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryId, setCategoryId] = useState("");
   const [subCategoryId, setSubCategoryId] = useState("");
   const [governorate, setGovernorate] = useState("");
   const [city, setCity] = useState("");
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const c = searchParams.get("categoryId");
+    const g = searchParams.get("governorate");
+    const q = searchParams.get("q");
+    if (c) setCategoryId(c);
+    if (g) setGovernorate(g);
+    if (q) setSearch(q);
+  }, [searchParams]);
 
   const [partners, setPartners] = useState<MarketplacePartnerItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -75,14 +86,23 @@ export function PartnersListing() {
     .filter(Boolean).length;
 
   return (
-    <div>
-      <PageHeader
-        title="Nos partenaires"
-        description="Retrouvez l'ensemble des clubs et espaces qui vous accueillent."
-      />
+    <div className={variant === "embedded" ? "scroll-mt-24" : ""} id={variant === "embedded" ? "categories" : undefined}>
+      {variant === "page" ? (
+        <PageHeader
+          title="Catégories"
+          description="Filtrez par catégorie, sous-catégorie et région, puis parcourez les produits disponibles."
+        />
+      ) : (
+        <div className="mb-6">
+          <h2 className="text-lg font-bold text-slate-900 sm:text-xl">Catégories</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Filtrez par catégorie, sous-catégorie et région, puis parcourez les produits disponibles.
+          </p>
+        </div>
+      )}
 
       {/* Filters */}
-      <div className="mt-6 rounded-xl border border-zinc-200 bg-white p-3 shadow-sm sm:p-4">
+      <div className={`rounded-xl border border-zinc-200 bg-white p-3 shadow-sm sm:p-4 ${variant === "embedded" ? "mt-0" : "mt-6"}`}>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <FormField label="Catégorie">
             <Select
@@ -204,7 +224,7 @@ function PartnerTile({ partner }: { partner: MarketplacePartnerItem }) {
   return (
     <Link
       href={`/partenaires/${partner.id}`}
-      className="group flex h-full flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white transition hover:border-emerald-300 hover:shadow-md"
+      className="group flex h-full flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white transition hover:border-teal-300 hover:shadow-md"
     >
       <div className="relative aspect-square w-full overflow-hidden bg-zinc-100">
         <Image

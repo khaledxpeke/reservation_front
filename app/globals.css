@@ -1,16 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fdfbf7;
-  --foreground: #18181b; /* zinc-900 */
-  --muted: #a1a1aa; /* zinc-400 */
-  --border: #e4e4e7; /* zinc-200 */
-  --accent: #18181b; /* zinc-900 */
-  --accent-hover: #27272a; /* zinc-800 */
-  --primary: #18181b; /* zinc-900 */
-  --secondary: #f4f4f5; /* zinc-100 */
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --muted: #94a3b8;
+  --border: #e2e8f0;
+  --accent: #14b8a6;
+  --accent-hover: #0d9488;
+  --primary: #0f172a;
+  --secondary: #f1f5f9;
   --font-geist-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-geist-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+/** Full-bleed section from within a max-width main column */
+.breakout-viewport {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
 }
 
 @theme inline {
@@ -40,7 +47,7 @@ body {
 }
 
 ::selection {
-  background: #e0e7ff;
-  color: var(--accent);
+  background: #ccfbf1;
+  color: var(--foreground);
 }
 

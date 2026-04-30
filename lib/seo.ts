@@ -1,16 +1,11 @@
 import type { Metadata } from "next";
-
-const SITE_NAME = "Padel Résa";
-const BASE_DESC =
-  "Trouvez un partenaire, consultez les créneaux et réservez votre ressource en quelques clics.";
+import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/brand";
 
 export function seo(
   overrides: Partial<Metadata> & { title?: string; description?: string } = {},
 ): Metadata {
-  const title = overrides.title
-    ? `${overrides.title} | ${SITE_NAME}`
-    : `${SITE_NAME} — Réservation de ressources`;
-  const description = overrides.description ?? BASE_DESC;
+  const title = overrides.title ? `${overrides.title} | ${SITE_NAME}` : `${SITE_NAME} — Location entre particuliers et pros`;
+  const description = overrides.description ?? SITE_DESCRIPTION;
 
   return {
     title,

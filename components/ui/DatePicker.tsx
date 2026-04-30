@@ -382,7 +382,7 @@ export function DatePicker({
                   selected
                     ? "bg-zinc-900 text-white"
                     : today
-                      ? "bg-emerald-50 text-emerald-700"
+                      ? "bg-teal-50 text-teal-700"
                       : currentMonth
                         ? "text-zinc-800 hover:bg-zinc-100"
                         : "text-zinc-300 hover:bg-zinc-50"

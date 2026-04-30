@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { RentZoneLogo, rentZoneAriaLabel } from "@/components/brand/RentZoneLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import type { AuthUser } from "@/lib/api/types";
@@ -54,20 +55,36 @@ function NavLink({
   label,
   pathname,
   onClick,
+  matchPrefix = true,
+  exact = false,
 }: {
   href: string;
   label: string;
   pathname: string;
   onClick?: () => void;
+  matchPrefix?: boolean;
+  /** When true, active only if pathname equals the path part of href (no #). */
+  exact?: boolean;
 }) {
-  const active = pathname === href || (href !== "/" && pathname.startsWith(href));
+  const pathPart = href.split("#")[0]?.split("?")[0] || "/";
+
+  let active: boolean;
+  if (exact) {
+    active = pathname === pathPart;
+  } else if (href.includes("#")) {
+    active = pathname === pathPart;
+  } else if (matchPrefix) {
+    active = pathname === pathPart || (pathPart !== "/" && pathname.startsWith(`${pathPart}/`));
+  } else {
+    active = pathname === pathPart;
+  }
   return (
     <Link
       href={href}
       prefetch={false}
       onClick={onClick}
       className={`text-sm font-medium tracking-wide transition-colors duration-200 ${
-        active ? "text-zinc-900" : "text-zinc-400 hover:text-zinc-900"
+        active ? "text-slate-900" : "text-slate-500 hover:text-slate-900"
       }`}
     >
       {label}
@@ -113,7 +130,7 @@ function AvatarMenu({ onClose }: { onClose?: () => void }) {
           href="/connexion"
           prefetch={false}
           onClick={onClose}
-          className="text-sm font-medium tracking-wide text-zinc-400 transition-colors hover:text-zinc-900"
+          className="text-sm font-medium tracking-wide text-slate-500 transition-colors hover:text-slate-900"
         >
           Connexion
         </Link>
@@ -121,7 +138,7 @@ function AvatarMenu({ onClose }: { onClose?: () => void }) {
           href="/inscription"
           prefetch={false}
           onClick={onClose}
-          className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-700"
+          className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
         >
           S&apos;inscrire
         </Link>
@@ -207,28 +224,22 @@ export function SiteHeader() {
   const close = () => setOpen(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-zinc-100 bg-white/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-8 px-6 lg:px-8">
-        <Link
-          href="/"
-          prefetch={false}
-          className="flex items-center gap-3 text-sm font-semibold uppercase tracking-widest text-zinc-900"
-        >
-          <span className="flex h-1.5 w-1.5 rounded-full bg-zinc-900" />
-          Padel Résa
+    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:gap-8 lg:px-8">
+        <Link href="/" prefetch={false} className="min-w-0 shrink" aria-label={rentZoneAriaLabel()}>
+          <RentZoneLogo className="[&_svg]:h-9 [&_svg]:w-9 sm:[&_svg]:h-10 sm:[&_svg]:w-10" />
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden items-center gap-8 md:flex">
-          <NavLink href="/" label="Accueil" pathname={pathname} />
-          <NavLink href="/partenaires" label="Partenaires" pathname={pathname} />
-          <NavLink href="/jouer" label="Jouer" pathname={pathname} />
-          <NavLink href="/offres" label="Offres" pathname={pathname} />
+        <nav className="hidden flex-1 items-center justify-center gap-6 lg:gap-8 md:flex">
+          <NavLink href="/" label="Explorer" pathname={pathname} exact />
+          <NavLink href="/partenaires" label="Catégories" pathname={pathname} exact />
+          <NavLink href="/offres" label="Annonces" pathname={pathname} exact />
           <RoleLinks pathname={pathname} />
         </nav>
 
         {/* Desktop right side */}
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center gap-2 md:flex md:gap-3">
           <NotificationBell />
           <AvatarMenu />
         </div>
@@ -238,7 +249,7 @@ export function SiteHeader() {
           type="button"
           aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
           onClick={() => setOpen((v) => !v)}
-          className="flex h-8 w-8 items-center justify-center text-zinc-400 hover:text-zinc-900 md:hidden"
+          className="flex h-8 w-8 items-center justify-center text-slate-400 hover:text-slate-900 md:hidden"
         >
           {open ? (
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -254,14 +265,13 @@ export function SiteHeader() {
 
       {/* Mobile drawer */}
       {open && (
-        <div className="border-t border-zinc-100 bg-white px-6 pb-8 pt-6 md:hidden">
+        <div className="border-t border-slate-100 bg-white px-6 pb-8 pt-6 md:hidden">
           <nav className="flex flex-col gap-6">
-            <NavLink href="/" label="Accueil" pathname={pathname} onClick={close} />
-            <NavLink href="/partenaires" label="Partenaires" pathname={pathname} onClick={close} />
-            <NavLink href="/jouer" label="Jouer" pathname={pathname} onClick={close} />
-            <NavLink href="/offres" label="Offres" pathname={pathname} onClick={close} />
+            <NavLink href="/" label="Explorer" pathname={pathname} onClick={close} exact />
+            <NavLink href="/partenaires" label="Catégories" pathname={pathname} onClick={close} exact />
+            <NavLink href="/offres" label="Annonces" pathname={pathname} onClick={close} exact />
             <RoleLinks pathname={pathname} onClose={close} />
-            <div className="flex items-center gap-3 border-t border-zinc-100 pt-4">
+            <div className="flex items-center gap-3 border-t border-slate-100 pt-4">
               <NotificationBell />
               <AvatarMenu onClose={close} />
             </div>

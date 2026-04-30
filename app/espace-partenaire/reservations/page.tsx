@@ -388,7 +388,7 @@ export default function PartnerReservationsPage() {
                   </p>
                   <Button
                     type="button"
-                    variant="gradient"
+                    variant="primary"
                     className="mt-3 w-full"
                     onClick={() => void act(selectedReservation.id, "PAID")}
                   >

@@ -1,11 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { seo } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Inscription | Padel Résa",
+export const metadata: Metadata = seo({
+  title: "Inscription",
   description:
-    "Créez votre compte joueur pour réserver vos terrains, ou rejoignez la plateforme en tant que partenaire.",
-};
+    "Créez votre compte sur Rent zone pour louer ou proposer du matériel et des espaces, ou inscrivez-vous comme partenaire.",
+});
 
 export default function InscriptionPage() {
   return (
@@ -21,7 +22,7 @@ export default function InscriptionPage() {
         <ChoiceCard
           href="/inscription/client"
           title="Je suis joueur"
-          description="Réservez vos terrains, suivez vos parties et retrouvez votre historique."
+          description="Réservez des créneaux, suivez vos locations et votre historique."
           cta="S'inscrire comme joueur"
         />
         <ChoiceCard
@@ -34,7 +35,7 @@ export default function InscriptionPage() {
 
       <p className="mt-6 text-center text-sm text-zinc-500">
         Déjà inscrit ?{" "}
-        <Link href="/connexion" className="font-medium text-emerald-600 hover:underline">
+        <Link href="/connexion" className="font-semibold text-teal-600 hover:text-teal-700">
           Se connecter
         </Link>
       </p>
@@ -56,12 +57,15 @@ function ChoiceCard({
   return (
     <Link
       href={href}
-      className="group flex h-full flex-col rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:border-emerald-300 hover:shadow-md"
+      className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-6 text-left shadow-sm transition hover:border-teal-300 hover:shadow-md"
     >
       <h2 className="text-lg font-semibold text-zinc-900">{title}</h2>
-      <p className="mt-1 flex-1 text-sm text-zinc-500">{description}</p>
-      <span className="mt-4 inline-flex items-center text-sm font-medium text-emerald-600 group-hover:underline">
-        {cta} →
+      <p className="mt-2 flex-1 text-sm text-zinc-500">{description}</p>
+      <span className="mt-4 inline-flex items-center text-sm font-semibold text-teal-600">
+        {cta}
+        <span className="ml-1" aria-hidden>
+          →
+        </span>
       </span>
     </Link>
   );

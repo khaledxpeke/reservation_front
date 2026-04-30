@@ -288,7 +288,7 @@ export function PartnerBooking({
           </div>
 
           {customerProfile ? (
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs text-teal-800">
               <span className="truncate">
                 Connecté en tant que{" "}
                 <strong className="font-semibold">

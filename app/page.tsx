@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
+import { RentZoneHome } from "@/components/landing/RentZoneHome";
+import { SITE_DESCRIPTION } from "@/lib/brand";
 import { seo } from "@/lib/seo";
-import { MarketplaceHome } from "@/components/marketplace/MarketplaceHome";
 
 export const metadata: Metadata = seo({
   title: "Accueil",
-  description:
-    "Recherchez un club de padel, consultez les créneaux disponibles et réservez en quelques clics.",
+  description: SITE_DESCRIPTION,
 });
 
 export default function Home() {
-  return <MarketplaceHome />;
+  return <RentZoneHome />;
 }

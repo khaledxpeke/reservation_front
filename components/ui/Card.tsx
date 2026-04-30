@@ -29,7 +29,7 @@ export function StatCard({
     <Card className="p-6 bg-white border border-zinc-200">
       <dt className="text-sm font-bold text-zinc-500 uppercase tracking-wider">{label}</dt>
       <dd className="mt-2 text-4xl font-black text-zinc-900">{value}</dd>
-      {detail && <p className="mt-2 text-xs font-bold text-emerald-700 bg-emerald-50 inline-block px-2.5 py-1 rounded-md uppercase tracking-wide">{detail}</p>}
+      {detail && <p className="mt-2 text-xs font-bold text-teal-700 bg-teal-50 inline-block px-2.5 py-1 rounded-md uppercase tracking-wide">{detail}</p>}
     </Card>
   );
 }

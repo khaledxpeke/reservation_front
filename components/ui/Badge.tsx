@@ -2,7 +2,7 @@ type BadgeVariant = "default" | "success" | "warning" | "danger" | "info" | "gra
 
 const styles: Record<BadgeVariant, string> = {
   default: "bg-zinc-100 text-zinc-700 border border-zinc-200 shadow-sm",
-  success: "bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm shadow-emerald-100",
+  success: "bg-teal-100 text-teal-800 border border-teal-200 shadow-sm shadow-teal-100",
   warning: "bg-amber-100 text-amber-800 border border-amber-200 shadow-sm shadow-amber-100",
   danger: "bg-rose-100 text-rose-800 border border-rose-200 shadow-sm shadow-rose-100",
   info: "bg-sky-100 text-sky-800 border border-sky-200 shadow-sm shadow-sky-100",

@@ -210,7 +210,7 @@ export default function AdminReservationsPage() {
                           <>
                             <Button
                               size="sm"
-                              variant="gradient"
+                              variant="primary"
                               onClick={() => void act(r.id, "PAID")}
                               title="Marquer payée"
                             >
