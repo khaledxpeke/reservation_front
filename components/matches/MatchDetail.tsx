@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSocket } from "@/contexts/SocketContext";
+import { MatchGroupChat } from "@/components/matches/MatchGroupChat";
+import { MatchChatIncomingToast } from "@/components/matches/MatchChatIncomingToast";
 import {
   GENDER_PREF_LABEL,
   MATCH_STATUS_LABEL,
@@ -44,6 +47,7 @@ function formatLongDate(iso: string) {
 export function MatchDetail({ id }: { id: string }) {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const { socket, joinMatchRoom, watchMatchPost, unwatchMatchPost } = useSocket();
 
   const [post, setPost] = useState<MatchPostDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,6 +57,15 @@ export function MatchDetail({ id }: { id: string }) {
   const [joinMessage, setJoinMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [respondingId, setRespondingId] = useState<string | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [messageToast, setMessageToast] = useState<{
+    id: string;
+    senderName: string;
+    preview: string;
+  } | null>(null);
+  const [chatUnread, setChatUnread] = useState(0);
+  const chatOpenRef = useRef(false);
+  chatOpenRef.current = chatOpen;
   const { confirm: confirmDialog, dialog } = useConfirmDialog();
 
   const load = useCallback(async () => {
@@ -71,6 +84,33 @@ export function MatchDetail({ id }: { id: string }) {
     void load();
   }, [load]);
 
+  const reloadPostQuiet = useCallback(async () => {
+    try {
+      setPost(await getMatch(id));
+    } catch {
+      /* keep current data on transient errors */
+    }
+  }, [id]);
+
+  /** Live list of demands / status without full page reload */
+  useEffect(() => {
+    if (!user) return;
+    watchMatchPost(id);
+    return () => unwatchMatchPost(id);
+  }, [user, id, watchMatchPost, unwatchMatchPost]);
+
+  useEffect(() => {
+    if (!socket || !user) return;
+    const onUpdated = (payload: { matchPostId?: string }) => {
+      if (payload.matchPostId !== id) return;
+      void reloadPostQuiet();
+    };
+    socket.on("match:updated", onUpdated);
+    return () => {
+      socket.off("match:updated", onUpdated);
+    };
+  }, [socket, user, id, reloadPostQuiet]);
+
   const isCustomer = user?.role === "CUSTOMER";
   const isCreator = !!user && post?.creatorId === user.id;
 
@@ -87,6 +127,59 @@ export function MatchDetail({ id }: { id: string }) {
   const remaining = post ? Math.max(0, post.neededPlayers - acceptedCount) : 0;
   const isFull = post ? acceptedCount >= post.neededPlayers : false;
   const isOpen = post?.status === "OPEN";
+
+  // User is a chat member if they are the creator OR their request was accepted
+  const isChatMember =
+    !!user && !!post && (isCreator || myRequest?.status === "ACCEPTED");
+
+  // Stay in the match WebSocket room on this page so messages arrive even when the panel is closed
+  useEffect(() => {
+    if (!post?.id || !isChatMember) return;
+    joinMatchRoom(post.id);
+  }, [post?.id, isChatMember, joinMatchRoom]);
+
+  useEffect(() => {
+    if (!socket || !post?.id || !user || !isChatMember) return;
+
+    const onMsg = (msg: {
+      id: string;
+      matchPostId: string;
+      senderId: string;
+      content: string;
+      sender?: {
+        customerProfile: { firstName: string; lastName: string } | null;
+      };
+    }) => {
+      if (msg.matchPostId !== post.id) return;
+      if (msg.senderId === user.id) return;
+      if (!chatOpenRef.current) {
+        const name = msg.sender?.customerProfile
+          ? `${msg.sender.customerProfile.firstName} ${msg.sender.customerProfile.lastName}`.trim()
+          : "Joueur";
+        setMessageToast({
+          id: msg.id,
+          senderName: name,
+          preview: msg.content.length > 180 ? `${msg.content.slice(0, 180)}…` : msg.content,
+        });
+        setChatUnread((c) => c + 1);
+      }
+    };
+
+    socket.on("chat:message", onMsg);
+    return () => {
+      socket.off("chat:message", onMsg);
+    };
+  }, [socket, post?.id, user, isChatMember]);
+
+  const openChat = useCallback(() => {
+    setChatOpen(true);
+    setChatUnread(0);
+    setMessageToast(null);
+  }, []);
+
+  const dismissToast = useCallback(() => {
+    setMessageToast(null);
+  }, []);
 
   const onJoin = async () => {
     if (!post) return;
@@ -184,9 +277,64 @@ export function MatchDetail({ id }: { id: string }) {
     : "Joueur";
   const location = [post.city, post.governorate].filter(Boolean).join(", ");
 
+  const groupChatTitle = post
+    ? `Groupe · ${new Date(post.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}`
+    : "Groupe";
+
   return (
     <article className="grid gap-6 lg:grid-cols-3">
       {dialog}
+
+      {/* Floating group chat — visible to accepted members + creator */}
+      {isChatMember && (
+        <>
+          {messageToast && (
+            <MatchChatIncomingToast
+              key={messageToast.id}
+              senderName={messageToast.senderName}
+              preview={messageToast.preview}
+              chatTitle={groupChatTitle}
+              onOpen={openChat}
+              onDismiss={dismissToast}
+            />
+          )}
+          <MatchGroupChat
+            matchPostId={post!.id}
+            matchLabel={groupChatTitle}
+            open={chatOpen}
+            onClose={() => setChatOpen(false)}
+          />
+          {!chatOpen && (
+            <div className="fixed bottom-6 right-4 z-50 sm:right-8">
+              <button
+                type="button"
+                onClick={openChat}
+                className="relative flex h-14 w-14 items-center justify-center rounded-full bg-teal-500 shadow-lg transition-transform hover:scale-105 hover:bg-teal-600 min-h-[48px] min-w-[48px]"
+                aria-label="Ouvrir la discussion du groupe"
+              >
+                <svg
+                  className="h-6 w-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+                {chatUnread > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white ring-2 ring-white">
+                    {chatUnread > 9 ? "9+" : chatUnread}
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
+        </>
+      )}
       <div className="lg:col-span-2 space-y-6">
         <header className="rounded-2xl border border-zinc-200 bg-white p-5">
           <div className="flex items-start justify-between gap-3">
@@ -341,8 +489,71 @@ export function MatchDetail({ id }: { id: string }) {
             email={post.creator.email}
           />
         </div>
+
+        {isChatMember ? <GroupMembersCard post={post} /> : null}
       </aside>
     </article>
+  );
+}
+
+/** Liste commune : prénom, nom, téléphone (données déjà filtrées côté API pour le groupe). */
+function GroupMembersCard({ post }: { post: MatchPostDetail }) {
+  const accepted = post.requests.filter((r) => r.status === "ACCEPTED");
+  const creator = post.creator;
+  const creatorProfile = creator.customerProfile;
+  const organizerLabel = creatorProfile
+    ? `${creatorProfile.firstName} ${creatorProfile.lastName}`.trim()
+    : "Organisateur";
+
+  return (
+    <div className="rounded-2xl border border-teal-100 bg-teal-50/40 p-5">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-teal-800">
+        Membres du groupe
+      </h3>
+      <p className="mt-1 text-xs text-zinc-600">
+        Prénom, nom et numéro visibles entre le groupe (organisateur et joueurs acceptés).
+      </p>
+      <ul className="mt-4 space-y-4">
+        <li className="rounded-lg border border-white/80 bg-white/90 p-3 shadow-sm">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-teal-700">
+            Organisateur
+          </p>
+          <p className="mt-1 text-sm font-semibold text-zinc-900">{organizerLabel}</p>
+          {creatorProfile?.phone ? (
+            <a
+              href={`tel:${creatorProfile.phone}`}
+              className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:underline"
+            >
+              {creatorProfile.phone}
+            </a>
+          ) : (
+            <p className="mt-1 text-xs text-zinc-400">Téléphone non renseigné</p>
+          )}
+        </li>
+        {accepted.map((r) => {
+          const p = r.user?.customerProfile;
+          const full = p ? `${p.firstName} ${p.lastName}`.trim() : "Joueur";
+          return (
+            <li
+              key={r.id}
+              className="rounded-lg border border-white/80 bg-white/90 p-3 shadow-sm"
+            >
+              <p className="text-sm font-semibold text-zinc-900">{full}</p>
+              {p?.phone ? (
+                <a
+                  href={`tel:${p.phone}`}
+                  className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:underline"
+                >
+                  {p.phone}
+                </a>
+              ) : (
+                <p className="mt-1 text-xs text-zinc-400">Téléphone non renseigné</p>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 

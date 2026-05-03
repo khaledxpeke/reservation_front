@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSocket } from "@/contexts/SocketContext";
 import {
   getUnreadCount,
   listNotifications,
@@ -11,7 +12,7 @@ import {
   type Notification as NotifType,
 } from "@/lib/api/notifications";
 
-const POLL_MS = 30_000;
+const POLL_MS = 60_000; // Still poll as backup, but primary is WS
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -26,6 +27,7 @@ function timeAgo(iso: string): string {
 
 export function NotificationBell() {
   const { user, loading } = useAuth();
+  const { socket } = useSocket();
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<NotifType[]>([]);
@@ -41,7 +43,7 @@ export function NotificationBell() {
     }
   }, []);
 
-  // Poll unread count while user is logged in
+  // Poll unread count while user is logged in (fallback)
   useEffect(() => {
     if (!user) return;
     const initial = setTimeout(() => void fetchCount(), 0);
@@ -51,6 +53,19 @@ export function NotificationBell() {
       clearInterval(id);
     };
   }, [user, fetchCount]);
+
+  // Real-time: push new notification into the bell immediately
+  useEffect(() => {
+    if (!socket) return;
+    const handler = (notif: NotifType) => {
+      setUnread((c) => c + 1);
+      setItems((prev) => [notif, ...prev].slice(0, 30));
+    };
+    socket.on("notification:new", handler);
+    return () => {
+      socket.off("notification:new", handler);
+    };
+  }, [socket]);
 
   // Fetch recent notifications when panel opens
   useEffect(() => {

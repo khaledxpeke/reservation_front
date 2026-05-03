@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { QueryProvider } from "@/contexts/QueryProvider";
+import { SocketProvider } from "@/contexts/SocketContext";
 import { AppShell } from "@/components/layout/AppShell";
 import { seo } from "@/lib/seo";
 
@@ -25,7 +26,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen flex flex-col bg-white text-zinc-900" suppressHydrationWarning>
         <QueryProvider>
           <AuthProvider>
-            <AppShell>{children}</AppShell>
+            <SocketProvider>
+              <AppShell>{children}</AppShell>
+            </SocketProvider>
           </AuthProvider>
         </QueryProvider>
       </body>

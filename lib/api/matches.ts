@@ -163,6 +163,29 @@ export function listMyJoinRequests(params: ListMatchesParams = {}) {
   });
 }
 
+// ----- chat -----
+
+export interface ChatMessageItem {
+  id: string;
+  matchPostId: string;
+  senderId: string;
+  content: string;
+  createdAt: string;
+  sender: {
+    id: string;
+    customerProfile: { firstName: string; lastName: string } | null;
+  };
+}
+
+export function getMatchChatMessages(
+  matchPostId: string,
+  opts: { before?: string; limit?: number } = {},
+) {
+  return apiRequest<ChatMessageItem[]>(`/api/matches/${matchPostId}/messages`, {
+    query: { before: opts.before, limit: opts.limit },
+  });
+}
+
 // ----- helpers -----
 
 export const SKILL_LEVEL_LABEL: Record<SkillLevel, string> = {

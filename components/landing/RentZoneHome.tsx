@@ -235,6 +235,34 @@ export function RentZoneHome() {
         </div>
       </section>
 
+      {/* ── Trouver des joueurs ───────────────────────────────────────────── */}
+      <section className="mx-auto max-w-6xl px-4 pb-10 pt-4 sm:px-6 sm:pb-12">
+        <div className="flex flex-col gap-5 rounded-3xl border border-slate-200/90 bg-gradient-to-br from-white to-slate-50/80 p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-8">
+          <div className="max-w-xl">
+            <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+              Cherchez des coéquipiers
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">
+              Publiez une annonce (il vous manque des joueurs) ou rejoignez une partie près de chez vous — padel, tennis et autres sports.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2.5 sm:shrink-0 sm:flex-row sm:items-center">
+            <Link
+              href="/jouer"
+              className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-teal-200 hover:bg-teal-50 sm:min-w-[11rem]"
+            >
+              Voir les annonces
+            </Link>
+            <Link
+              href="/jouer/nouveau"
+              className="inline-flex items-center justify-center rounded-full bg-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-600 sm:min-w-[11rem]"
+            >
+              Publier une annonce
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── Recommended ───────────────────────────────────────────────────── */}
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
         <div className="flex items-end justify-between gap-4">

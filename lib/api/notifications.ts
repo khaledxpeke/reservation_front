@@ -6,7 +6,9 @@ export type NotificationType =
   | "MATCH_REQUEST_ACCEPTED"
   | "MATCH_REQUEST_DECLINED"
   | "MATCH_POST_CANCELLED"
-  | "MATCH_POST_FULL";
+  | "MATCH_POST_FULL"
+  | "MATCH_POST_EXPIRED"
+  | "MATCH_CHAT_MESSAGE";
 
 export interface Notification {
   id: string;
