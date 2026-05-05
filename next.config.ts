@@ -26,6 +26,14 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  async redirects() {
+    return [
+      { source: "/jouer", destination: "/annonces", permanent: true },
+      { source: "/jouer/nouveau", destination: "/annonces/nouveau", permanent: true },
+      { source: "/jouer/:id", destination: "/annonces/:id", permanent: true },
+    ];
+  },
+
   async headers() {
     return [
       {

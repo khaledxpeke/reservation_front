@@ -30,6 +30,25 @@ export function searchPartners(params: MarketplaceSearchParams) {
   });
 }
 
+/** Tous les partenaires marketplace (pagination API max 100 / page). */
+export async function fetchAllPartners(): Promise<MarketplacePartnerItem[]> {
+  const byId = new Map<string, MarketplacePartnerItem>();
+  let page = 1;
+  const limit = 100;
+  for (;;) {
+    const res = await searchPartners({ page, limit });
+    for (const p of res.items) {
+      byId.set(p.id, p);
+    }
+    const { totalPages } = res.pagination;
+    if (totalPages === 0 || page >= totalPages) break;
+    page += 1;
+  }
+  return Array.from(byId.values()).sort((a, b) =>
+    a.name.localeCompare(b.name, "fr", { sensitivity: "base" }),
+  );
+}
+
 export interface CourtOfferRow {
   partnerId: string;
   partnerName: string;

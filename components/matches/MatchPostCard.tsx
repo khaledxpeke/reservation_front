@@ -2,73 +2,65 @@ import Link from "next/link";
 import {
   GENDER_PREF_LABEL,
   MATCH_STATUS_LABEL,
-  SKILL_LEVEL_LABEL,
-  SPORT_LABEL,
+  formatScheduleSummary,
   type MatchPostListItem,
 } from "@/lib/api/matches";
 import { Badge } from "@/components/ui";
 
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString("fr-FR", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-    });
-  } catch {
-    return iso;
-  }
-}
-
 export function MatchPostCard({ post }: { post: MatchPostListItem }) {
   const accepted = post._count.requests;
-  const remaining = Math.max(0, post.neededPlayers - accepted);
+  const remaining = Math.max(0, post.neededPeople - accepted);
   const creatorName = post.creator.customerProfile
     ? `${post.creator.customerProfile.firstName} ${post.creator.customerProfile.lastName.charAt(0)}.`
-    : "Joueur";
+    : "Membre";
   const location = [post.city, post.governorate].filter(Boolean).join(", ");
 
   return (
     <Link
-      href={`/jouer/${post.id}`}
+      href={`/annonces/${post.id}`}
       className="group flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4 transition hover:border-emerald-300 hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-zinc-900">
-            {creatorName}
-          </p>
-          <p className="truncate text-xs text-zinc-500">
-            {location || "Lieu à définir"}
-          </p>
+          <p className="truncate text-sm font-semibold text-zinc-900">{creatorName}</p>
+          <p className="truncate text-xs text-zinc-500">{location || "Lieu à préciser"}</p>
         </div>
         {post.status !== "OPEN" ? (
           <Badge variant={post.status === "CLOSED" ? "info" : "default"}>
             {MATCH_STATUS_LABEL[post.status]}
           </Badge>
         ) : (
-          <Badge variant="success">{remaining} place{remaining > 1 ? "s" : ""}</Badge>
+          <Badge variant="success">
+            {remaining} place{remaining !== 1 ? "s" : ""}
+          </Badge>
         )}
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5 text-xs">
+        <span className="rounded-md bg-amber-50 px-2 py-1 font-medium text-amber-800">
+          {post.category.name}
+        </span>
         <span className="rounded-md bg-violet-50 px-2 py-1 font-medium text-violet-700">
-          {SPORT_LABEL[post.sport]}
+          {post.subCategory.name}
         </span>
         <span className="rounded-md bg-zinc-100 px-2 py-1 font-medium text-zinc-700">
-          {formatDate(post.date)}
+          {formatScheduleSummary(post.scheduleSlots)}
         </span>
-        <span className="rounded-md bg-zinc-100 px-2 py-1 font-medium text-zinc-700">
-          {post.startTime} – {post.endTime}
-        </span>
-        <span className="rounded-md bg-emerald-50 px-2 py-1 font-medium text-emerald-700">
-          {SKILL_LEVEL_LABEL[post.skillLevel]}
-        </span>
-        {post.genderPref !== "ANY" && (
+        {post.skillLevel && post.category.slug === "sports" ? (
+          <span className="rounded-md bg-emerald-50 px-2 py-1 font-medium text-emerald-700">
+            Niveau : {post.skillLevel}
+          </span>
+        ) : null}
+        {post.genderPref !== "ANY" && post.category.slug === "sports" ? (
           <span className="rounded-md bg-sky-50 px-2 py-1 font-medium text-sky-700">
             {GENDER_PREF_LABEL[post.genderPref]}
           </span>
-        )}
+        ) : null}
+        {post.partner ? (
+          <span className="rounded-md bg-teal-50 px-2 py-1 font-medium text-teal-800">
+            Partenaire : {post.partner.name}
+          </span>
+        ) : null}
       </div>
 
       {post.description ? (
@@ -77,11 +69,9 @@ export function MatchPostCard({ post }: { post: MatchPostListItem }) {
 
       <div className="mt-auto flex items-center justify-between text-xs text-zinc-500">
         <span>
-          {accepted}/{post.neededPlayers} joueur{post.neededPlayers > 1 ? "s" : ""}
+          {accepted}/{post.neededPeople} confirmé{post.neededPeople > 1 ? "s" : ""}
         </span>
-        <span className="font-medium text-emerald-600 group-hover:underline">
-          Voir →
-        </span>
+        <span className="font-medium text-emerald-600 group-hover:underline">Voir →</span>
       </div>
     </Link>
   );

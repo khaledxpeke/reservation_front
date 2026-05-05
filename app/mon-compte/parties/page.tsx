@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   MATCH_STATUS_LABEL,
   REQUEST_STATUS_LABEL,
-  SKILL_LEVEL_LABEL,
+  formatScheduleSummary,
   listMyCreatedMatches,
   listMyJoinRequests,
   type MatchPostDetail,
@@ -32,7 +32,7 @@ export default function MesPartiesPage() {
           title="Mes parties"
           description="Vos annonces publiées et vos demandes envoyées."
         />
-        <Link href="/jouer/nouveau">
+        <Link href="/annonces/nouveau">
           <Button>Publier une annonce</Button>
         </Link>
       </div>
@@ -75,18 +75,6 @@ function TabButton({
   );
 }
 
-function formatDate(iso: string) {
-  try {
-    return new Date(iso).toLocaleDateString("fr-FR", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-    });
-  } catch {
-    return iso;
-  }
-}
-
 function CreatedTab() {
   const [items, setItems] = useState<MatchPostDetail[]>([]);
   const [loading, setLoading] = useState(true);
@@ -122,7 +110,7 @@ function CreatedTab() {
     return (
       <div className="rounded-lg border border-dashed border-zinc-200 px-4 py-12 text-center text-sm text-zinc-500">
         Vous n&apos;avez pas encore publié d&apos;annonce.{" "}
-        <Link href="/jouer/nouveau" className="font-medium text-emerald-600 hover:underline">
+        <Link href="/annonces/nouveau" className="font-medium text-emerald-600 hover:underline">
           Publier maintenant
         </Link>
       </div>
@@ -142,7 +130,7 @@ function CreatedTab() {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-semibold text-zinc-900">
-                  {formatDate(post.date)} · {post.startTime} – {post.endTime}
+                  {post.category.name} · {post.subCategory.name} · {formatScheduleSummary(post.scheduleSlots)}
                 </p>
                 <Badge
                   variant={
@@ -157,17 +145,18 @@ function CreatedTab() {
                 </Badge>
               </div>
               <p className="mt-1 text-xs text-zinc-500">
-                {[post.city, post.governorate].filter(Boolean).join(", ") ||
-                  "Lieu à définir"}{" "}
-                · Niveau {SKILL_LEVEL_LABEL[post.skillLevel]}
+                {[post.city, post.governorate].filter(Boolean).join(", ") || "Lieu à définir"}
+                {post.skillLevel && post.category.slug === "sports"
+                  ? ` · Niveau ${post.skillLevel}`
+                  : null}
               </p>
               <p className="mt-1 text-xs font-medium text-zinc-700">
-                {accepted}/{post.neededPlayers} accepté{accepted > 1 ? "s" : ""}
+                {accepted}/{post.neededPeople} accepté{accepted > 1 ? "s" : ""}
                 {pending > 0 ? ` · ${pending} en attente` : ""}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <Link href={`/jouer/${post.id}`}>
+              <Link href={`/annonces/${post.id}`}>
                 <Button variant="secondary" size="sm">
                   Gérer
                 </Button>
@@ -221,7 +210,7 @@ function RequestsTab() {
     return (
       <div className="rounded-lg border border-dashed border-zinc-200 px-4 py-12 text-center text-sm text-zinc-500">
         Vous n&apos;avez envoyé aucune demande.{" "}
-        <Link href="/jouer" className="font-medium text-emerald-600 hover:underline">
+        <Link href="/annonces" className="font-medium text-emerald-600 hover:underline">
           Voir les annonces
         </Link>
       </div>
@@ -240,7 +229,7 @@ function RequestsTab() {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-semibold text-zinc-900">
-                  {formatDate(post.date)} · {post.startTime} – {post.endTime}
+                  {post.category.name} · {post.subCategory.name} · {formatScheduleSummary(post.scheduleSlots)}
                 </p>
                 <Badge
                   variant={
@@ -288,7 +277,7 @@ function RequestsTab() {
               ) : null}
             </div>
             <div className="shrink-0">
-              <Link href={`/jouer/${post.id}`}>
+              <Link href={`/annonces/${post.id}`}>
                 <Button variant="secondary" size="sm">
                   Voir
                 </Button>

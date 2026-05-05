@@ -4,7 +4,7 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-export default async function MatchDetailPage({ params }: Props) {
+export default async function AnnonceDetailPage({ params }: Props) {
   const { id } = await params;
   return <MatchDetail id={id} />;
 }

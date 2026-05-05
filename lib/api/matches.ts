@@ -1,11 +1,21 @@
 import { apiRequest } from "@/lib/api/client";
 import type { Gender, Paginated } from "@/lib/api/types";
 
-export type SkillLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
 export type GenderPreference = "ANY" | "MALE" | "FEMALE";
 export type MatchPostStatus = "OPEN" | "CLOSED" | "CANCELLED";
 export type MatchRequestStatus = "PENDING" | "ACCEPTED" | "DECLINED";
-export type SportType = "PADEL" | "TENNIS" | "FOOTBALL" | "BASKETBALL" | "VOLLEYBALL" | "OTHER";
+
+export interface ScheduleSlot {
+  date: string;
+  startTime: string;
+  endTime: string;
+}
+
+export interface PartnerBrief {
+  id: string;
+  name: string;
+  city: string;
+}
 
 export interface MatchCreatorPublic {
   id: string;
@@ -30,18 +40,39 @@ export interface MatchJoinRequest {
   user?: MatchCreatorPublic;
 }
 
+export interface MatchCategoryBrief {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export interface MatchSubCategoryBrief {
+  id: string;
+  name: string;
+}
+
 export interface MatchPostListItem {
   id: string;
   creatorId: string;
+  categoryId: string;
+  subCategoryId: string;
+  category: MatchCategoryBrief;
+  subCategory: MatchSubCategoryBrief;
   date: string;
   startTime: string;
   endTime: string;
+  lastSlotDate: string;
+  scheduleSlots: ScheduleSlot[];
   governorate: string | null;
   city: string | null;
-  neededPlayers: number;
-  sport: SportType;
+  neededPeople: number;
+  /** Rétrocompat affichage : [nom sous-catégorie]. */
+  categories: string[];
   genderPref: GenderPreference;
-  skillLevel: SkillLevel;
+  /** Niveau recherché (texte libre), surtout pour la catégorie marketplace « sports ». */
+  skillLevel: string | null;
+  meta: Record<string, unknown>;
+  partner: PartnerBrief | null;
   description: string | null;
   status: MatchPostStatus;
   createdAt: string;
@@ -68,25 +99,29 @@ export interface ListMatchesParams {
   limit?: number;
   status?: MatchPostStatus;
   governorate?: string;
-  skillLevel?: SkillLevel;
+  /** Filtre listings : valeur dans categories (ex. « Padel »). */
+  category?: string;
+  categoryId?: string;
+  subCategoryId?: string;
   genderPref?: GenderPreference;
-  sport?: SportType;
   date?: string;
   dateFrom?: string;
   dateTo?: string;
 }
 
 export interface CreateMatchPostBody {
-  date: string;
-  startTime: string;
-  endTime: string;
+  categoryId: string;
+  subCategoryId: string;
+  scheduleSlots: ScheduleSlot[];
   governorate?: string;
   city?: string;
-  neededPlayers: number;
-  sport?: SportType;
+  neededPeople: number;
+  description: string;
+  partnerId?: string | null;
+  meta?: Record<string, unknown>;
   genderPref?: GenderPreference;
-  skillLevel: SkillLevel;
-  description?: string;
+  /** Facultatif ; souvent utilisé pour la catégorie « sports ». */
+  skillLevel?: string;
 }
 
 export type UpdateMatchPostBody = Partial<CreateMatchPostBody> & {
@@ -163,8 +198,6 @@ export function listMyJoinRequests(params: ListMatchesParams = {}) {
   });
 }
 
-// ----- chat -----
-
 export interface ChatMessageItem {
   id: string;
   matchPostId: string;
@@ -186,13 +219,30 @@ export function getMatchChatMessages(
   });
 }
 
-// ----- helpers -----
+/** Activités proposées lorsque le type d'annonce est « Sport » (Padel n'est pas un type d'annonce à part). */
+export const SPORT_DISCIPLINE_PRESETS = [
+  "Padel",
+  "Tennis",
+  "Football",
+  "Basket",
+  "Volleyball",
+  "Course à pied",
+  "Fitness",
+  "Squash",
+] as const;
 
-export const SKILL_LEVEL_LABEL: Record<SkillLevel, string> = {
-  BEGINNER: "Débutant",
-  INTERMEDIATE: "Intermédiaire",
-  ADVANCED: "Avancé",
-};
+export const SPORT_DISCIPLINE_OPTIONS = [...SPORT_DISCIPLINE_PRESETS, "Autre"] as const;
+export type SportDisciplineOption = (typeof SPORT_DISCIPLINE_OPTIONS)[number];
+
+/** @deprecated Utiliser SPORT_DISCIPLINE_PRESETS */
+export const CATEGORY_PRESETS = SPORT_DISCIPLINE_PRESETS;
+/** @deprecated Utiliser SPORT_DISCIPLINE_OPTIONS */
+export const SPORT_CATEGORY_OPTIONS = SPORT_DISCIPLINE_OPTIONS;
+/** @deprecated Utiliser SportDisciplineOption */
+export type SportCategoryOption = SportDisciplineOption;
+
+/** Exemples pour le champ niveau (saisie libre côté API). */
+export const SKILL_LEVEL_SUGGESTIONS = ["Débutant", "Intermédiaire", "Avancé", "Confirmé", "3-4", "5-6"] as const;
 
 export const GENDER_PREF_LABEL: Record<GenderPreference, string> = {
   ANY: "Tous",
@@ -212,11 +262,23 @@ export const REQUEST_STATUS_LABEL: Record<MatchRequestStatus, string> = {
   DECLINED: "Refusée",
 };
 
-export const SPORT_LABEL: Record<SportType, string> = {
-  PADEL: "Padel",
-  TENNIS: "Tennis",
-  FOOTBALL: "Football",
-  BASKETBALL: "Basketball",
-  VOLLEYBALL: "Volleyball",
-  OTHER: "Autre",
-};
+export function formatShortDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString("fr-FR", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
+  } catch {
+    return iso;
+  }
+}
+
+/** Affiche le programme multi-jours de façon lisible */
+export function formatScheduleSummary(slots: ScheduleSlot[]): string {
+  if (slots.length === 0) return "";
+  if (slots.length === 1) {
+    return `${formatShortDate(slots[0]!.date)} · ${slots[0]!.startTime}–${slots[0]!.endTime}`;
+  }
+  return `${slots.length} jours (${formatShortDate(slots[0]!.date)} → ${formatShortDate(slots[slots.length - 1]!.date)})`;
+}

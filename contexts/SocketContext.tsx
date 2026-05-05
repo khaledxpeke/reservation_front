@@ -17,7 +17,7 @@ interface SocketContextValue {
   connected: boolean;
   joinMatchRoom: (matchPostId: string) => void;
   sendMessage: (matchPostId: string, content: string) => void;
-  /** Subscribe to live updates on /jouer/[id] (new demands, status, etc.) */
+  /** Subscribe to live updates on /annonces/[id] (new demands, status, etc.) */
   watchMatchPost: (matchPostId: string) => void;
   unwatchMatchPost: (matchPostId: string) => void;
 }

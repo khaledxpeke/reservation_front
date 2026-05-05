@@ -234,8 +234,8 @@ export function SiteHeader() {
         <nav className="hidden flex-1 items-center justify-center gap-6 lg:gap-8 md:flex">
           <NavLink href="/" label="Explorer" pathname={pathname} exact />
           <NavLink href="/partenaires" label="Catégories" pathname={pathname} exact />
-          <NavLink href="/offres" label="Annonces" pathname={pathname} exact />
-          <NavLink href="/jouer" label="Jouer" pathname={pathname} />
+          <NavLink href="/offres" label="Offres" pathname={pathname} exact />
+          <NavLink href="/annonces" label="Annonces" pathname={pathname} />
           <RoleLinks pathname={pathname} />
         </nav>
 
@@ -270,8 +270,8 @@ export function SiteHeader() {
           <nav className="flex flex-col gap-6">
             <NavLink href="/" label="Explorer" pathname={pathname} onClick={close} exact />
             <NavLink href="/partenaires" label="Catégories" pathname={pathname} onClick={close} exact />
-            <NavLink href="/offres" label="Annonces" pathname={pathname} onClick={close} exact />
-            <NavLink href="/jouer" label="Jouer" pathname={pathname} onClick={close} />
+            <NavLink href="/offres" label="Offres" pathname={pathname} onClick={close} exact />
+            <NavLink href="/annonces" label="Annonces" pathname={pathname} onClick={close} />
             <RoleLinks pathname={pathname} onClose={close} />
             <div className="flex items-center gap-3 border-t border-slate-100 pt-4">
               <NotificationBell />

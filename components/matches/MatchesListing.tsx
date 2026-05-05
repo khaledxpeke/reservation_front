@@ -3,16 +3,13 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { listCategories, type Category } from "@/lib/api/categories";
 import {
   GENDER_PREF_LABEL,
-  SKILL_LEVEL_LABEL,
-  SPORT_LABEL,
   listMatches,
   type GenderPreference,
   type ListMatchesParams,
   type MatchPostListItem,
-  type SkillLevel,
-  type SportType,
 } from "@/lib/api/matches";
 import { TUNISIA_GOVERNORATES } from "@/lib/tunisiaGovernorates";
 import {
@@ -20,6 +17,7 @@ import {
   DatePicker,
   EmptyState,
   FormField,
+  Input,
   PageHeader,
   Select,
   Spinner,
@@ -33,20 +31,54 @@ export function MatchesListing() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [filterCategoryId, setFilterCategoryId] = useState("");
+  const [filterSubCategoryId, setFilterSubCategoryId] = useState("");
+
   const [governorate, setGovernorate] = useState("");
-  const [skillLevel, setSkillLevel] = useState<SkillLevel | "">("");
+  const [categoryKeyword, setCategoryKeyword] = useState("");
   const [genderPref, setGenderPref] = useState<GenderPreference | "">("");
-  const [sport, setSport] = useState<SportType | "">("");
   const [date, setDate] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const list = await listCategories();
+        if (!cancelled) {
+          setCategories([...list].sort((a, b) => a.name.localeCompare(b.name, "fr")));
+        }
+      } catch {
+        if (!cancelled) setCategories([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const selectedFilterCategory = useMemo(
+    () => categories.find((c) => c.id === filterCategoryId),
+    [categories, filterCategoryId],
+  );
+
+  const filterSubCategories = useMemo(() => {
+    if (!selectedFilterCategory) return [];
+    return [...selectedFilterCategory.subCategories].sort((a, b) =>
+      a.name.localeCompare(b.name, "fr"),
+    );
+  }, [selectedFilterCategory]);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     const params: ListMatchesParams = { limit: 50, page: 1 };
     if (governorate) params.governorate = governorate;
-    if (skillLevel) params.skillLevel = skillLevel;
+    if (filterCategoryId) params.categoryId = filterCategoryId;
+    if (filterSubCategoryId) params.subCategoryId = filterSubCategoryId;
+    const kw = categoryKeyword.trim();
+    if (kw) params.category = kw;
     if (genderPref) params.genderPref = genderPref;
-    if (sport) params.sport = sport;
     if (date) params.date = date;
     try {
       const result = await listMatches(params);
@@ -56,7 +88,14 @@ export function MatchesListing() {
     } finally {
       setLoading(false);
     }
-  }, [governorate, skillLevel, genderPref, sport, date]);
+  }, [
+    governorate,
+    filterCategoryId,
+    filterSubCategoryId,
+    categoryKeyword,
+    genderPref,
+    date,
+  ]);
 
   useEffect(() => {
     void load();
@@ -65,25 +104,33 @@ export function MatchesListing() {
   const ctaHref = useMemo(() => {
     if (!user) return "/connexion";
     if (user.role !== "CUSTOMER") return "/connexion";
-    return "/jouer/nouveau";
+    return "/annonces/nouveau";
   }, [user]);
 
   const resetFilters = () => {
     setGovernorate("");
-    setSkillLevel("");
+    setFilterCategoryId("");
+    setFilterSubCategoryId("");
+    setCategoryKeyword("");
     setGenderPref("");
-    setSport("");
     setDate("");
   };
 
-  const hasFilters = !!(governorate || skillLevel || genderPref || sport || date);
+  const hasFilters = !!(
+    governorate ||
+    filterCategoryId ||
+    filterSubCategoryId ||
+    categoryKeyword.trim() ||
+    genderPref ||
+    date
+  );
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <PageHeader
-          title="Trouver des partenaires"
-          description="Parcourez les annonces ouvertes ou publiez la vôtre pour compléter votre équipe."
+          title="Annonces"
+          description="Filtrez par catégorie du site (comme le marketplace), date, région… ou publiez votre annonce."
         />
         <div className="flex shrink-0 items-center gap-2">
           <Link href={ctaHref}>
@@ -92,38 +139,56 @@ export function MatchesListing() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 rounded-xl border border-zinc-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-5">
-        <FormField label="Date">
-          <DatePicker
-            value={date}
-            onChange={(next) => setDate(next)}
-            size="sm"
-          />
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-zinc-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <FormField label="Date (dans le créneau)">
+          <DatePicker value={date} onChange={(next) => setDate(next)} size="sm" />
         </FormField>
-        <FormField label="Région">
+        <FormField label="Catégorie">
           <Select
-            value={governorate}
-            onChange={(e) => setGovernorate(e.target.value)}
+            value={filterCategoryId}
+            onChange={(e) => {
+              setFilterCategoryId(e.target.value);
+              setFilterSubCategoryId("");
+            }}
             size="sm"
           >
-            <option value="">Toutes les régions</option>
-            {TUNISIA_GOVERNORATES.map((g) => (
-              <option key={g} value={g}>
-                {g}
+            <option value="">Toutes</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
               </option>
             ))}
           </Select>
         </FormField>
-        <FormField label="Niveau">
+        <FormField label="Sous-catégorie">
           <Select
-            value={skillLevel}
-            onChange={(e) => setSkillLevel(e.target.value as SkillLevel | "")}
+            value={filterSubCategoryId}
+            onChange={(e) => setFilterSubCategoryId(e.target.value)}
             size="sm"
+            disabled={!filterCategoryId || filterSubCategories.length === 0}
           >
-            <option value="">Tous niveaux</option>
-            {(["BEGINNER", "INTERMEDIATE", "ADVANCED"] as SkillLevel[]).map((s) => (
-              <option key={s} value={s}>
-                {SKILL_LEVEL_LABEL[s]}
+            <option value="">Toutes</option>
+            {filterSubCategories.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </Select>
+        </FormField>
+        <FormField label="Mot-clé (nom affiché)">
+          <Input
+            size="sm"
+            placeholder="Ex. Padel"
+            value={categoryKeyword}
+            onChange={(e) => setCategoryKeyword(e.target.value)}
+          />
+        </FormField>
+        <FormField label="Région">
+          <Select value={governorate} onChange={(e) => setGovernorate(e.target.value)} size="sm">
+            <option value="">Toutes les régions</option>
+            {TUNISIA_GOVERNORATES.map((g) => (
+              <option key={g} value={g}>
+                {g}
               </option>
             ))}
           </Select>
@@ -143,28 +208,13 @@ export function MatchesListing() {
           </Select>
         </FormField>
 
-        <FormField label="Sport">
-          <Select
-            value={sport}
-            onChange={(e) => setSport(e.target.value as SportType | "")}
-            size="sm"
-          >
-            <option value="">Tous les sports</option>
-            {(["PADEL", "TENNIS", "FOOTBALL", "BASKETBALL", "VOLLEYBALL", "OTHER"] as SportType[]).map((s) => (
-              <option key={s} value={s}>
-                {SPORT_LABEL[s]}
-              </option>
-            ))}
-          </Select>
-        </FormField>
-
-        {hasFilters && (
-          <div className="sm:col-span-2 lg:col-span-5 flex justify-end">
+        {hasFilters ? (
+          <div className="flex justify-end sm:col-span-2 lg:col-span-3 xl:col-span-4">
             <Button variant="ghost" size="sm" onClick={resetFilters}>
               Réinitialiser les filtres
             </Button>
           </div>
-        )}
+        ) : null}
       </div>
 
       {loading ? (
@@ -181,7 +231,7 @@ export function MatchesListing() {
           description={
             hasFilters
               ? "Essayez de retirer un filtre, ou publiez votre propre annonce."
-              : "Soyez le premier à publier une annonce et trouver des partenaires."
+              : "Soyez le premier à publier une annonce."
           }
         />
       ) : (

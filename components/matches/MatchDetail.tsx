@@ -11,13 +11,12 @@ import {
   GENDER_PREF_LABEL,
   MATCH_STATUS_LABEL,
   REQUEST_STATUS_LABEL,
-  SKILL_LEVEL_LABEL,
-  SPORT_LABEL,
   cancelMatch,
   getMatch,
   joinMatch,
   respondToJoinRequest,
   withdrawMyJoinRequest,
+  formatScheduleSummary,
   type MatchJoinRequest,
   type MatchPostDetail,
 } from "@/lib/api/matches";
@@ -124,8 +123,8 @@ export function MatchDetail({ id }: { id: string }) {
     [post],
   );
 
-  const remaining = post ? Math.max(0, post.neededPlayers - acceptedCount) : 0;
-  const isFull = post ? acceptedCount >= post.neededPlayers : false;
+  const remaining = post ? Math.max(0, post.neededPeople - acceptedCount) : 0;
+  const isFull = post ? acceptedCount >= post.neededPeople : false;
   const isOpen = post?.status === "OPEN";
 
   // User is a chat member if they are the creator OR their request was accepted
@@ -265,7 +264,7 @@ export function MatchDetail({ id }: { id: string }) {
     return (
       <div className="space-y-3">
         <Alert>{error ?? "Annonce introuvable."}</Alert>
-        <Link href="/jouer">
+        <Link href="/annonces">
           <Button variant="secondary">Retour aux annonces</Button>
         </Link>
       </div>
@@ -342,13 +341,13 @@ export function MatchDetail({ id }: { id: string }) {
               <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
                 Annonce de {creatorName}
               </p>
-              <h1 className="mt-1 text-xl font-semibold text-zinc-900">
-                {formatLongDate(post.date)}
-              </h1>
-              <p className="mt-1 text-sm text-zinc-600">
-                {post.startTime} – {post.endTime}
-                {location ? ` · ${location}` : ""}
+              <p className="mt-1 text-xs font-medium text-amber-800">
+                {post.category.name} · {post.subCategory.name}
               </p>
+              <h1 className="mt-1 text-xl font-semibold text-zinc-900">
+                {formatScheduleSummary(post.scheduleSlots)}
+              </h1>
+              {location ? <p className="mt-1 text-sm text-zinc-600">{location}</p> : null}
             </div>
             <Badge
               variant={
@@ -363,25 +362,67 @@ export function MatchDetail({ id }: { id: string }) {
             </Badge>
           </div>
 
+          <ul className="mt-4 space-y-1 rounded-lg bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
+            {post.scheduleSlots.map((s, i) => (
+              <li key={`${s.date}-${i}`}>
+                <span className="font-medium">{formatLongDate(s.date)}</span> · {s.startTime} – {s.endTime}
+              </li>
+            ))}
+          </ul>
+
+          {post.category.slug === "vehicules" &&
+          typeof post.meta.transportFrom === "string" &&
+          typeof post.meta.transportTo === "string" ? (
+            <p className="mt-3 text-sm text-zinc-700">
+              Trajet : <strong>{post.meta.transportFrom}</strong> → <strong>{post.meta.transportTo}</strong>
+            </p>
+          ) : null}
+          {typeof post.meta.groupTargetSize === "number" ? (
+            <p className="mt-3 text-sm text-zinc-700">
+              Groupe cible : {post.meta.groupTargetSize} personnes
+              {typeof post.meta.discountPercent === "number"
+                ? ` · réduction ~${post.meta.discountPercent}%`
+                : null}
+              {typeof post.meta.activityLabel === "string" ? ` · ${post.meta.activityLabel}` : null}
+            </p>
+          ) : null}
+
           <div className="mt-4 flex flex-wrap gap-1.5 text-xs">
+            <span className="rounded-md bg-amber-50 px-2 py-1 font-medium text-amber-800">
+              {post.category.name}
+            </span>
             <span className="rounded-md bg-violet-50 px-2 py-1 font-medium text-violet-700">
-              {SPORT_LABEL[post.sport]}
+              {post.subCategory.name}
             </span>
-            <span className="rounded-md bg-emerald-50 px-2 py-1 font-medium text-emerald-700">
-              Niveau : {SKILL_LEVEL_LABEL[post.skillLevel]}
-            </span>
-            <span className="rounded-md bg-sky-50 px-2 py-1 font-medium text-sky-700">
-              Préférence : {GENDER_PREF_LABEL[post.genderPref]}
-            </span>
+            {post.skillLevel && post.category.slug === "sports" ? (
+              <span className="rounded-md bg-emerald-50 px-2 py-1 font-medium text-emerald-700">
+                Niveau : {post.skillLevel}
+              </span>
+            ) : null}
+            {post.genderPref !== "ANY" && post.category.slug === "sports" ? (
+              <span className="rounded-md bg-sky-50 px-2 py-1 font-medium text-sky-700">
+                Préférence : {GENDER_PREF_LABEL[post.genderPref]}
+              </span>
+            ) : null}
             <span className="rounded-md bg-zinc-100 px-2 py-1 font-medium text-zinc-700">
-              {acceptedCount}/{post.neededPlayers} joueur{post.neededPlayers > 1 ? "s" : ""}
+              {acceptedCount}/{post.neededPeople} participant{post.neededPeople > 1 ? "s" : ""}
             </span>
           </div>
 
+          {post.partner ? (
+            <div className="mt-4 rounded-lg border border-teal-100 bg-teal-50/50 p-3 text-sm">
+              <p className="text-xs font-semibold uppercase text-teal-800">Partenaire lié</p>
+              <Link
+                href={`/partenaires/${post.partner.id}`}
+                className="mt-1 inline-block font-medium text-teal-700 hover:underline"
+              >
+                {post.partner.name} — {post.partner.city}
+              </Link>
+            </div>
+          ) : null}
+
           {post.description ? (
-            <p className="mt-4 whitespace-pre-line text-sm text-zinc-700">
-              {post.description}
-            </p>
+            <p className="mt-4 whitespace-pre-line text-sm text-zinc-700">{post.description}</p>
           ) : null}
         </header>
 
@@ -397,7 +438,7 @@ export function MatchDetail({ id }: { id: string }) {
       <aside className="space-y-4">
         <div className="rounded-2xl border border-zinc-200 bg-white p-5">
           <h2 className="text-sm font-semibold text-zinc-900">
-            {isCreator ? "Votre annonce" : "Rejoindre cette partie"}
+            {isCreator ? "Votre annonce" : "Rejoindre cette annonce"}
           </h2>
 
           {actionMessage ? (
@@ -417,6 +458,8 @@ export function MatchDetail({ id }: { id: string }) {
                 onCancel={onCancelPost}
                 disabled={submitting || post.status === "CANCELLED"}
                 status={post.status}
+                partnerId={post.partner?.id}
+                partnerName={post.partner?.name}
               />
             ) : !user ? (
               <>
@@ -451,7 +494,7 @@ export function MatchDetail({ id }: { id: string }) {
             ) : !isOpen ? (
               <p className="text-zinc-600">Cette annonce n&apos;accepte plus de demandes.</p>
             ) : isFull ? (
-              <p className="text-zinc-600">Cette partie est complète.</p>
+              <p className="text-zinc-600">Le groupe est complet.</p>
             ) : (
               <>
                 <p className="text-xs text-zinc-500">
@@ -561,23 +604,29 @@ function CreatorActions({
   onCancel,
   disabled,
   status,
+  partnerId,
+  partnerName,
 }: {
   onCancel: () => void;
   disabled: boolean;
   status: MatchPostDetail["status"];
+  partnerId?: string;
+  partnerName?: string;
 }) {
   return (
     <div className="space-y-2">
       <p className="text-xs text-zinc-500">
         Vous gérez cette annonce. Acceptez ou refusez les demandes ci-contre.
       </p>
+      {status === "CLOSED" && partnerId ? (
+        <Link href={`/partenaires/${partnerId}`} className="block">
+          <Button variant="primary" className="w-full">
+            Réserver chez {partnerName ?? "le partenaire"}
+          </Button>
+        </Link>
+      ) : null}
       {status !== "CANCELLED" ? (
-        <Button
-          variant="secondary"
-          className="w-full"
-          onClick={onCancel}
-          disabled={disabled}
-        >
+        <Button variant="secondary" className="w-full" onClick={onCancel} disabled={disabled}>
           Annuler l&apos;annonce
         </Button>
       ) : null}
