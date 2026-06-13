@@ -60,10 +60,16 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     };
     s.on("chat:auto_join", onAutoJoin);
 
+    const onAutoLeave = ({ matchPostId }: { matchPostId: string }) => {
+      s.emit("chat:leave", matchPostId);
+    };
+    s.on("chat:auto_leave", onAutoLeave);
+
     return () => {
       s.off("connect", onConnect);
       s.off("disconnect", onDisconnect);
       s.off("chat:auto_join", onAutoJoin);
+      s.off("chat:auto_leave", onAutoLeave);
     };
   }, [user]);
 

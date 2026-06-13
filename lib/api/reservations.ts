@@ -21,6 +21,21 @@ export function createReservation(body: CreateReservationBody) {
   return apiRequest<unknown>("/api/reservations", { method: "POST", body });
 }
 
+export interface PartnerBlockSlotBody {
+  resourceId: string;
+  date: string;
+  /** Ressources facturées à la journée : date de fin incluse (optionnel si un seul jour). */
+  endDate?: string;
+  startTime: string;
+  endTime: string;
+  note?: string;
+}
+
+/** Bloque un créneau (réservation hors plateforme), sans saisie client. */
+export function createPartnerTimeBlock(body: PartnerBlockSlotBody) {
+  return apiRequest<PartnerReservation>("/api/reservations/partner/block", { method: "POST", body });
+}
+
 export interface PartnerReservation {
   id: string;
   reference: string;
@@ -42,11 +57,16 @@ export interface ListPartnerReservationsParams {
   status?: ReservationStatus;
   date?: string;
   resourceId?: string;
+  /** true : inclure les résas qui couvrent ce jour (bloc multi-jours). */
+  dateOverlap?: boolean;
 }
 
 export function listPartnerReservations(params: ListPartnerReservationsParams) {
+  const { dateOverlap, ...rest } = params;
+  const q: Record<string, string | number | boolean | undefined> = { ...rest };
+  if (dateOverlap === true) q.dateOverlap = "true";
   return apiRequest<Paginated<PartnerReservation>>("/api/reservations/partner", {
-    query: params as Record<string, string | number | undefined>,
+    query: q,
   });
 }
 

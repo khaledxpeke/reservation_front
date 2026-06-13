@@ -14,6 +14,8 @@ import {
   cancelMatch,
   getMatch,
   joinMatch,
+  requestLeaveMatch,
+  respondToLeaveRequest,
   respondToJoinRequest,
   withdrawMyJoinRequest,
   formatScheduleSummary,
@@ -56,6 +58,7 @@ export function MatchDetail({ id }: { id: string }) {
   const [joinMessage, setJoinMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [respondingId, setRespondingId] = useState<string | null>(null);
+  const [respondingLeaveId, setRespondingLeaveId] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [messageToast, setMessageToast] = useState<{
     id: string;
@@ -228,6 +231,44 @@ export function MatchDetail({ id }: { id: string }) {
       setActionError(err instanceof ApiError ? err.message : "Action impossible.");
     } finally {
       setRespondingId(null);
+    }
+  };
+
+  const onRequestLeave = async () => {
+    if (!post) return;
+    setActionError(null);
+    setActionMessage(null);
+    const confirmed = await confirmDialog({
+      title: "Demander à quitter ?",
+      description:
+        "L'organisateur devra accepter votre départ. Vous resterez membre du groupe jusqu'à sa réponse.",
+      confirmLabel: "Envoyer la demande",
+    });
+    if (!confirmed) return;
+    setSubmitting(true);
+    try {
+      await requestLeaveMatch(post.id);
+      setActionMessage("Demande de départ envoyée.");
+      await load();
+    } catch (err) {
+      setActionError(err instanceof ApiError ? err.message : "Action impossible.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const onRespondLeave = async (requestId: string, status: "APPROVED" | "DECLINED") => {
+    if (!post) return;
+    setActionError(null);
+    setActionMessage(null);
+    setRespondingLeaveId(requestId);
+    try {
+      await respondToLeaveRequest(post.id, requestId, status);
+      await load();
+    } catch (err) {
+      setActionError(err instanceof ApiError ? err.message : "Action impossible.");
+    } finally {
+      setRespondingLeaveId(null);
     }
   };
 
@@ -430,7 +471,9 @@ export function MatchDetail({ id }: { id: string }) {
           <CreatorRequestsPanel
             post={post}
             onRespond={onRespond}
+            onRespondLeave={onRespondLeave}
             respondingId={respondingId}
+            respondingLeaveId={respondingLeaveId}
           />
         ) : null}
       </div>
@@ -489,6 +532,7 @@ export function MatchDetail({ id }: { id: string }) {
                 creatorPhone={post.creator.customerProfile?.phone}
                 creatorEmail={post.creator.email}
                 onWithdraw={onWithdraw}
+                onRequestLeave={onRequestLeave}
                 disabled={submitting}
               />
             ) : !isOpen ? (
@@ -639,12 +683,14 @@ function MyRequestStatus({
   creatorPhone,
   creatorEmail,
   onWithdraw,
+  onRequestLeave,
   disabled,
 }: {
   request: MatchJoinRequest;
   creatorPhone?: string;
   creatorEmail?: string;
   onWithdraw: () => void;
+  onRequestLeave: () => void;
   disabled: boolean;
 }) {
   return (
@@ -686,6 +732,25 @@ function MyRequestStatus({
           Retirer ma demande
         </Button>
       ) : null}
+
+      {request.status === "ACCEPTED" ? (
+        request.leaveStatus === "PENDING" ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <p className="text-xs font-medium text-amber-800">
+              Demande de départ en attente de validation par l&apos;organisateur.
+            </p>
+          </div>
+        ) : (
+          <Button
+            variant="secondary"
+            className="w-full"
+            onClick={onRequestLeave}
+            disabled={disabled}
+          >
+            Demander à quitter
+          </Button>
+        )
+      ) : null}
     </div>
   );
 }
@@ -693,14 +758,21 @@ function MyRequestStatus({
 function CreatorRequestsPanel({
   post,
   onRespond,
+  onRespondLeave,
   respondingId,
+  respondingLeaveId,
 }: {
   post: MatchPostDetail;
   onRespond: (requestId: string, status: "ACCEPTED" | "DECLINED") => void;
+  onRespondLeave: (requestId: string, status: "APPROVED" | "DECLINED") => void;
   respondingId: string | null;
+  respondingLeaveId: string | null;
 }) {
   const pending = post.requests.filter((r) => r.status === "PENDING");
   const answered = post.requests.filter((r) => r.status !== "PENDING");
+  const leavePending = post.requests.filter(
+    (r) => r.status === "ACCEPTED" && r.leaveStatus === "PENDING",
+  );
 
   return (
     <section className="rounded-2xl border border-zinc-200 bg-white p-5">
@@ -715,6 +787,28 @@ function CreatorRequestsPanel({
         </p>
       ) : (
         <div className="mt-3 space-y-4">
+          {leavePending.length > 0 ? (
+            <div>
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                Demandes de départ
+              </h3>
+              <ul className="space-y-2">
+                {leavePending.map((r) => (
+                  <RequestRow
+                    key={r.id}
+                    request={r}
+                    onAccept={() => onRespondLeave(r.id, "APPROVED")}
+                    onDecline={() => onRespondLeave(r.id, "DECLINED")}
+                    busy={respondingLeaveId === r.id}
+                    canAct
+                    acceptLabel="Autoriser le départ"
+                    declineLabel="Refuser"
+                  />
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
           {pending.length > 0 ? (
             <div>
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
@@ -802,12 +896,16 @@ function RequestRow({
   onDecline,
   busy,
   canAct,
+  acceptLabel,
+  declineLabel,
 }: {
   request: MatchJoinRequest;
   onAccept: () => void;
   onDecline: () => void;
   busy: boolean;
   canAct: boolean;
+  acceptLabel?: string;
+  declineLabel?: string;
 }) {
   const name = request.user?.customerProfile
     ? `${request.user.customerProfile.firstName} ${request.user.customerProfile.lastName}`
@@ -838,7 +936,7 @@ function RequestRow({
               onClick={onAccept}
               loading={busy}
             >
-              Accepter
+              {acceptLabel ?? "Accepter"}
             </Button>
             <Button
               variant="ghost"
@@ -846,7 +944,7 @@ function RequestRow({
               onClick={onDecline}
               disabled={busy}
             >
-              Refuser
+              {declineLabel ?? "Refuser"}
             </Button>
           </>
         ) : (

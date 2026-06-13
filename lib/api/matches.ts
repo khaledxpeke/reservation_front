@@ -4,6 +4,7 @@ import type { Gender, Paginated } from "@/lib/api/types";
 export type GenderPreference = "ANY" | "MALE" | "FEMALE";
 export type MatchPostStatus = "OPEN" | "CLOSED" | "CANCELLED";
 export type MatchRequestStatus = "PENDING" | "ACCEPTED" | "DECLINED";
+export type MatchLeaveStatus = "NONE" | "PENDING" | "APPROVED" | "DECLINED";
 
 export interface ScheduleSlot {
   date: string;
@@ -35,6 +36,10 @@ export interface MatchJoinRequest {
   userId: string;
   message: string | null;
   status: MatchRequestStatus;
+  leaveStatus?: MatchLeaveStatus;
+  leaveMessage?: string | null;
+  leaveRequestedAt?: string | null;
+  leaveResolvedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   user?: MatchCreatorPublic;
@@ -170,6 +175,27 @@ export function withdrawMyJoinRequest(id: string) {
   return apiRequest<{ message: string }>(`/api/matches/${id}/requests/me`, {
     method: "DELETE",
   });
+}
+
+export function requestLeaveMatch(id: string, message?: string) {
+  return apiRequest<MatchJoinRequest>(`/api/matches/${id}/leave-requests/me`, {
+    method: "POST",
+    body: message ? { message } : {},
+  });
+}
+
+export function respondToLeaveRequest(
+  id: string,
+  requestId: string,
+  status: "APPROVED" | "DECLINED",
+) {
+  return apiRequest<{ success: true } | MatchJoinRequest>(
+    `/api/matches/${id}/leave-requests/${requestId}`,
+    {
+      method: "PATCH",
+      body: { status },
+    },
+  );
 }
 
 export function respondToJoinRequest(

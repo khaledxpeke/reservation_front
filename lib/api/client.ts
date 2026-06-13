@@ -1,17 +1,9 @@
+import { getApiBaseUrl } from "@/lib/api/baseUrl";
 import { ApiError, type ApiErrorBody } from "@/lib/api/types";
 
 const ACCESS = "padel_access_token";
 const REFRESH = "padel_refresh_token";
 const USER = "padel_user";
-
-/**
- * On the client side, API calls go through the Next.js rewrite (/api/* -> backend).
- * On the server side (SSR/RSC), we call the backend directly.
- */
-function resolveBase(): string {
-  if (typeof window !== "undefined") return "";
-  return process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:4000";
-}
 
 export const tokenStorage = {
   getAccess: () =>
@@ -64,7 +56,7 @@ interface RawFail {
 async function tryRefresh(): Promise<boolean> {
   const refreshToken = tokenStorage.getRefresh();
   if (!refreshToken) return false;
-  const base = resolveBase();
+  const base = getApiBaseUrl();
   const res = await fetch(`${base}/api/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -95,7 +87,7 @@ export interface RequestOptions {
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", body, query, auth = true } = options;
-  const base = resolveBase();
+  const base = getApiBaseUrl();
   const url = `${base}${path}${query ? buildQuery(query) : ""}`;
 
   const headers: Record<string, string> = {

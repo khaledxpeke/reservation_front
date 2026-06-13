@@ -1,4 +1,5 @@
 import { apiRequest } from "@/lib/api/client";
+import { omitPastSlotsForVenueToday } from "@/lib/slotPastWallTime";
 
 export interface TimeSlot {
   startTime: string;
@@ -18,12 +19,14 @@ export interface AvailableSlotsParams {
   durationMin: number;
 }
 
-export function getAvailableSlots(params: AvailableSlotsParams) {
-  return apiRequest<AvailableSlotsResult>("/api/slots/available", {
+export async function getAvailableSlots(params: AvailableSlotsParams) {
+  const res = await apiRequest<AvailableSlotsResult>("/api/slots/available", {
     query: {
       resourceId: params.resourceId,
       date: params.date,
       durationMin: params.durationMin,
     },
   });
+  res.slots = omitPastSlotsForVenueToday(res.slots, params.date);
+  return res;
 }

@@ -1,5 +1,6 @@
 import { apiRequest } from "@/lib/api/client";
 import type { Paginated } from "@/lib/api/types";
+import { omitPastSlotsForVenueToday } from "@/lib/slotPastWallTime";
 
 export interface MarketplacePartnerItem {
   id: string;
@@ -75,10 +76,15 @@ export interface CourtSlotsParams {
   timeBand?: "morning" | "afternoon" | "evening" | "all";
 }
 
-export function searchCourtSlots(params: CourtSlotsParams) {
-  return apiRequest<{ items: CourtOfferRow[] }>("/api/marketplace/court-slots", {
+/** Recherche « à l’heure » : les créneaux du jour passé sont retirés côté client (aligné sur getAvailableSlots). */
+export async function searchCourtSlots(params: CourtSlotsParams) {
+  const res = await apiRequest<{ items: CourtOfferRow[] }>("/api/marketplace/court-slots", {
     query: { ...params } as Record<string, string | number | undefined>,
   });
+  if (params.date) {
+    res.items = omitPastSlotsForVenueToday(res.items, params.date);
+  }
+  return res;
 }
 
 export interface PublicPartner {

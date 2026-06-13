@@ -1,5 +1,5 @@
-import { apiRequest } from "@/lib/api/client";
-import { tokenStorage } from "@/lib/api/client";
+import { getApiBaseUrl } from "@/lib/api/baseUrl";
+import { apiRequest, tokenStorage } from "@/lib/api/client";
 import type { Paginated } from "@/lib/api/types";
 
 export type FactureStatus = "UNPAID" | "PARTIAL" | "PAID";
@@ -79,7 +79,7 @@ export async function downloadFacturePdf(id: string, reference: string) {
   const token = tokenStorage.getAccess();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`/api/factures/${id}/pdf`, { headers });
+  const res = await fetch(`${getApiBaseUrl()}/api/factures/${id}/pdf`, { headers });
   if (!res.ok) throw new Error("Téléchargement de la facture impossible.");
 
   const blob = await res.blob();

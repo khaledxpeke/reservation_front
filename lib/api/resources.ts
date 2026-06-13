@@ -1,5 +1,14 @@
 import { apiRequest } from "@/lib/api/client";
 
+export interface ResourceAvailability {
+  id?: string;
+  resourceId?: string;
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  slotIntervalMin: number;
+}
+
 export interface Resource {
   id: string;
   name: string;
@@ -12,6 +21,8 @@ export interface Resource {
   maxBookingDuration: number | null;
   bufferTimeMin: number;
   price: number | null;
+  /** Présent sur la liste partenaire : nécessaire pour calculer les durées de blocage. */
+  availabilities?: ResourceAvailability[];
 }
 
 export interface CreateResourceBody {

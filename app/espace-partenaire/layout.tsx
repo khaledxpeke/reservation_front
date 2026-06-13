@@ -8,6 +8,7 @@ const partnerLinks: DashboardNavLink[] = [
   { href: "/espace-partenaire/reservations", label: "Réservations" },
   { href: "/espace-partenaire/etat-reglement", label: "Etat règlement" },
   { href: "/espace-partenaire/ressources", label: "Ressources" },
+  { href: "/espace-partenaire/disponibilites", label: "Disponibilités" },
   { href: "/espace-partenaire/offres", label: "Mes offres" },
 ];
 
